@@ -22,7 +22,7 @@ export default function Page() {
             </p>
             <div className="mt-8 flex justify-center">
               <a
-                href="#get-started"
+                href="/dashboard"
                 className="inline-flex items-center rounded-full bg-white text-black px-6 py-2 text-sm md:text-base font-medium hover:bg-white/90 transition-colors"
               >
                 Get Started →
