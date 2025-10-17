@@ -1,107 +1,67 @@
 **Kill My Startup** — “Real-time market intelligence for founders. Get live metrics about your space, competitors, and audience sentiment — all powered by Perplexity Search.”
 
 Imagine a dashboard that **updates itself every 6–12 hours**.  
-Each widget feels like a **truth mirror** for your idea.
+
+- **“General information”** → summary of recent funding rounds and amounts for competitors
 
 - **“People talking about this”** → sparkline chart
-    
+    - **“User sentiment”** → aggregated word cloud (“love”, “boring”, “expensive”)
+
 - **“Competitors launched”** → timeline
+    - **“Funding activity”** → timeline graph (recent funding rounds, amounts)
     
+- **“Revenue monitoring”** → line chart (monthly recurring revenue, customer growth)
+
 - **“Top recent news”** → Perplexity-powered summaries
-    
-- **“Funding trend”** → simple up/down badge
-    
-- **“User sentiment”** → aggregated word cloud (“love”, “boring”, “expensive”)
-    
-- **“Tech mentions”** → tag cloud (LangChain, LlamaIndex, fine-tuning, etc.)
+    - **“Hiring signals”** → list of companies hiring in this space
 
-| Category                         | Metric                          | Why It Matters                               | Example Insight                                                        |
-| -------------------------------- | ------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------- |
-| **Competitive Landscape**        | **Similar Projects**            | See who’s building in your space right now.  | “4 startups launched in the last month doing AI for legal docs.”       |
-|                                  | **Launch Velocity**             | Track _how fast_ new entrants appear.        | “+60% new tools compared to last quarter.”<br>                         |
-|                                  | **Funding Activity**            | Who’s getting money, and for what.           | “2 Series A rounds this week for AI hiring tools.”                     |
-|                                  | **Tech Stack Mentions**         | What tools/tech others use.                  | “Most use LangChain + Pinecone; new ones moving to LlamaIndex.”        |
-| **Market Sentiment & Discourse** | **User Sentiment**              | How the public feels about the domain.       | “Neutral: most feedback is curiosity, not excitement.”                 |
-|                                  | **Pain Point Frequency**        | How often users complain about this problem. | “Reddit mentions of ‘data labeling is painful’ up 40%.”                |
-|                                  | **Excitement Trend**            | Is the topic heating up or cooling down?     | “Mentions peaked 2 weeks ago; down 10% since.”                         |
-| **Ecosystem Dynamics**           | **Acquisitions & Partnerships** | Signs of consolidation or opportunity.       | “Two recent M&As suggest strategic interest.”                          |
-|                                  | **Hiring Signals**              | Companies hiring for your space.             | “OpenAI hiring 4 roles for ‘document understanding’.”                  |
-|                                  | **Community Activity**          | Open source repos, Slack/Discord growth.     | “20% increase in GitHub commits on ‘RAG’ projects.”                    |
-| **Idea Distinctiveness**         | **Semantic Similarity Score**   | How unique your idea description is.         | “Similarity to existing startups: 0.62 — somewhat common.”             |
-|                                  | **Keyword Gaps**                | Keywords competitors use but you don’t.      | “You’re missing terms like ‘multi-agent’ or ‘retrieval augmentation’.” |
-|                                  | **Trend Adjacencies**           | Adjacent ideas with more traction.           | “AI + spreadsheets trending up vs. AI + documents flat.”               |
+## General information
+- Summary of recent funding rounds and amounts for competitors.
+    - Relevant competitiors would be updated each day based on news and market trends.
+- Data sources: Crunchbase, PitchBook, relevant news articles.
+- Frequency: Every day.
 
-## Example Use Case
+## People talking about this
 
-Founder types:
+### Sparkline chart
+- Track the volume of online conversations about your startup idea over time.
+- Track the volume of online conversations about competitors over time. 5-10 competitors would be choosen in the initial setup and can be updated later.
+- Data sources: Twitter, Reddit, Hacker News, relevant forums and blogs.
+- Frequency: Every hour.
 
-> “AI that helps therapists transcribe and summarize sessions.”
+### User sentiment
+- Generate a word cloud highlighting the most frequently used words and phrases associated with positive and negative sentiments
+    - About your startup idea located nerby the sparkline chart of your startup idea.
+    - About competitors located nerby the sparkline chart of competitors.
+- Data sources: Twitter, Reddit, Hacker News, relevant forums and blogs.
+- Frequency: Every hour.
 
-Dashboard returns:
+## Competitors launched
+### Timeline
+- It should be a timeline graph showing launch dates and following major milestones of competitors like funding rounds, new feature releases, partnerships, etc.
+- Data sources: Product Hunt, TechCrunch, Landing pages, Linkedin relevant blogs and forums.
+- Frequency: Every day.
 
-- 7 recent startups doing similar things
-- Sentiment: mostly positive (“helps burnout”, “finally useful AI”)
-- Funding: $10M raised last quarter in “AI mental health”
-- Stack: Whisper, GPT-4o, LangChain
-- Adjacency: AI for _patient summaries_ rising faster than _session transcription_
-- Weekly buzz trend: +22%
+## Revenue monitoring
+- Monitor key revenue metrics for competitors, such as monthly recurring revenue and customer growth.
+- Data sources: Competitors' websites, press releases, funding announcements.
+- Frequency: Every day.
+
+## Top recent news
+
+### Perplexity-powered summaries
+- Summarize the most recent news articles related to your startup idea and competitors.
+- Data sources: Google News, RSS feeds, relevant blogs and forums.
+- Frequency: Every day.
+
+### Hiring signals
+- Identify companies that are actively hiring in your startup's space. If they hire someone important (e.g., VP of Sales, Head of Engineering, Great Reseacher, Product Manager, etc.), it could indicate growth or new initiatives.
+- Data sources: LinkedIn, Indeed, company career pages.
+- Frequency: Every day.
 
 
-→ **Founder insight:** “Maybe I pivot toward patient summaries and apply to YC.”
-
-**1. Input**
-
-- Founder enters their _idea name + short description_ (“Uber for therapists”, “AI resume reviewer”).
-- Optional: industry tags or seed keywords.
-
-**2. Data Fetch (Cron Job + Perplexity API)**
-
-- Scheduled searches every 1 hour.
-- Query templates:
-    - `"similar startups to {idea}"`
-    - `"acquisitions in {industry}"`
-    - `"public sentiment on {idea keywords}"`
-
-**3. Processing**
-- Extract entities (company names, URLs, sentiment).
-- Run lightweight NLP:
-    - **Sentiment** via OpenAI or Cohere.
-    - **Similarity** via embeddings (compare your idea vs retrieved ones).
-    - **Trends** via count deltas.
-
-**4. Dashboard**
-
-- **“Kill / Survive / Pivot”** rating card (⚰️💡🔁).
-- Interactive widgets:
-    - Competitor timeline.      
-    - Sentiment over time graph.
-    - Mentions heatmap.
-    - Buzz velocity meter (are mentions accelerating or decaying?).
-
-**5. Alerts**
-- Email / Slack / Discord bot: “Your idea has 3 new clones” or “Market sentiment dropped 20% this week.”
----
-
-## 🏆 Hackathon Edge — What Judges Will Love
-
-1. **Perplexity API as the brain** — You’re not just summarizing, you’re _investigating live trends_ through search.
-2. **Founder painkiller** — Every builder struggles with idea validation.
-3. **Clever framing** — The _“Kill My Startup”_ brand is memorable and contrarian.
-4. **Insight loops** — It updates automatically and forces _founder humility_ through data.
-5. **Moat potential** — If people adopt it to test every idea, you become the _default startup reality engine_.
-
----
-
-## 💡 Example Demo Flow
-
-> Founder types: “AI tool that summarizes PDFs for students.”
-
-1. Perplexity finds: “ScholarAI”, “ChatPDF”, “Humata”, etc.    
-2. Dashboard shows:
-    - 14 similar startups (🔴 saturation high)
-    - Sentiment: Neutral (🤷 “Too many already”)
-    - Funding: $70M raised in 6 months
-    - Novelty: 0.28 cosine similarity → _not novel_
-    - 
-3. Verdict: **💀 Kill — oversaturated, stagnant sentiment.**
-4. Pivot suggestion: “AI that teaches citation literacy” → lower saturation, higher positive buzz.
+## Getting Started
+To get started with Kill My Startup, follow these steps:
+1. Sign up for an account on our website.
+2. Set up your dashboard by selecting your startup idea and competitors.
+3. Customize the metrics you want to track.
