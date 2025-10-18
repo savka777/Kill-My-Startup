@@ -26,7 +26,7 @@ export default function WordCloudCard({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
   const [sentimentFilter, setSentimentFilter] = useState<'all' | 'positive' | 'negative' | 'neutral'>('all');
-  const [zoomLevel, setZoomLevel] = useState(1.5); // Default to 150% zoom
+  const [zoomLevel, setZoomLevel] = useState(3.0); // Default to 300% zoom
 
   // lazy import to avoid SSR crash
   const WordCloudLib = useRef<any>(null);
