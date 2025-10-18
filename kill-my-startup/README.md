@@ -23,10 +23,10 @@ Imagine a dashboard that **updates itself every 6–12 hours**.
 
 ## People talking about this
 
-### Sparkline chart
+### Chart
 - Track the volume of online conversations about your startup idea over time.
 - Track the volume of online conversations about competitors over time. 5-10 competitors would be choosen in the initial setup and can be updated later.
-- Data sources: Twitter, Reddit, Hacker News, relevant forums and blogs.
+- Data sources: Twitter, Reddit, Hacker News, Product Hunt, relevant forums and blogs.
 - Frequency: Every hour.
 
 ### User sentiment
@@ -60,8 +60,32 @@ Imagine a dashboard that **updates itself every 6–12 hours**.
 - Frequency: Every day.
 
 
+## Project Structure
+
+### Social Media Scraping & Analysis
+- **`src/lib/social-media/`** - Backend logic for conversation tracking
+  - `conversation.ts` - API providers for Twitter, Reddit, HN, PH, forums
+  - `conversations.ts` - Seed script for testing data
+- **`src/components/social-media/`** - Frontend visualization components
+  - `PeopleTalkingAbout.tsx` - Main container component
+  - `ConversationVolumeChart.tsx` - Volume charts with Recharts
+  - `SentimentWordCloud.tsx` - Interactive word clouds
+  - `ConversationSourceBreakdown.tsx` - Source distribution charts
+- **`src/app/api/social-media/`** - API endpoints
+  - `ingest/` - Hourly data collection cron job
+  - `query/` - Dashboard data retrieval
+
+### Key Features
+- **Three-tier search strategy**: RapidAPI + Perplexity for comprehensive coverage
+- **Real-time sentiment analysis**: Using Perplexity Sonar for accurate classification
+- **Interactive visualizations**: Charts, word clouds, and source breakdowns
+- **Hourly data collection**: Automated cron jobs for fresh data
+- **Testing support**: Seed scripts for development without API calls
+
 ## Getting Started
 To get started with Kill My Startup, follow these steps:
-1. Sign up for an account on our website.
-2. Set up your dashboard by selecting your startup idea and competitors.
-3. Customize the metrics you want to track.
+1. Set up environment variables (see `ENVIRONMENT_SETUP.md`)
+2. Install dependencies: `npm install --legacy-peer-deps`
+3. Run database migration: `npx prisma db push`
+4. Seed test data: `npm run seed:conversations`
+5. Start development server: `npm run dev`

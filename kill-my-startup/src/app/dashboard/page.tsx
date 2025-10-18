@@ -1,5 +1,7 @@
 "use client"
 
+import PeopleTalkingAbout from '@/components/social-media/PeopleTalkingAbout'
+
 export default function DashboardPage() {
   return (
     <div className="py-2 w-full">
@@ -171,6 +173,14 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* People Talking About */}
+      <section id="people-talking" className="mt-6">
+        <PeopleTalkingAbout 
+          projectId="cmgvqp51q0000ihc3b4f0d3tv" 
+          initialDays={7} 
+        />
       </section>
 
       {/* Competitors Launched Timeline */}

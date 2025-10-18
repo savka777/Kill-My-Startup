@@ -10,6 +10,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// =============================================================================
+// STARTUP SUBMISSION MODELS
+// =============================================================================
+
 model StartupSubmission {
   id          String   @id @default(cuid())
   name        String
@@ -40,4 +44,146 @@ enum SubmissionStatus {
   REVIEWED
   REJECTED
   KILLED
+}
+
+// =============================================================================
+// SOCIAL MEDIA CONVERSATION TRACKING MODELS
+// =============================================================================
+
+// Core entities for conversation tracking
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  keywords    String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  mentions    ConversationMention[]
+  metrics     ConversationMetric[]
+  wordTokens  WordCloudToken[]
+  competitors ProjectCompetitor[]
+
+  @@map("projects")
+}
+
+model Competitor {
+  id          String   @id @default(cuid())
+  name        String
+  domain      String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  mentions    ConversationMention[]
+  metrics     ConversationMetric[]
+  wordTokens  WordCloudToken[]
+  projects    ProjectCompetitor[]
+
+  @@map("competitors")
+}
+
+model ProjectCompetitor {
+  id           String     @id @default(cuid())
+  projectId    String
+  competitorId String
+
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  competitor   Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, competitorId])
+  @@map("project_competitors")
+}
+
+// Conversation data models
+model ConversationMention {
+  id            String             @id @default(cuid())
+  projectId     String?
+  competitorId  String?
+  url           String
+  text          String
+  tokens        String[]
+  source        ConversationSource
+  publishedAt   DateTime
+  sentiment     Sentiment
+  sentimentScore Float?
+  createdAt     DateTime           @default(now())
+
+  project       Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  competitor    Competitor?       @relation(fields: [competitorId], references: [id], onDelete: SetNull)
+
+  @@unique([url])
+  @@index([publishedAt])
+  @@index([projectId, competitorId])
+  @@map("conversation_mentions")
+}
+
+model ConversationMetric {
+  id            String      @id @default(cuid())
+  projectId     String?
+  competitorId  String?
+  kind          MetricKind
+  tsHour        DateTime
+  value         Int
+  createdAt     DateTime    @default(now())
+
+  project       Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  competitor    Competitor? @relation(fields: [competitorId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, kind, tsHour], name: "project_metric_unique", map: "project_metric_unique")
+  @@unique([competitorId, kind, tsHour], name: "competitor_metric_unique", map: "competitor_metric_unique")
+  @@index([tsHour])
+  @@map("conversation_metrics")
+}
+
+model WordCloudToken {
+  id            String      @id @default(cuid())
+  projectId     String?
+  competitorId  String?
+  token         String
+  frequency     Int
+  sentiment     Sentiment
+  timeWindow    TimeWindow
+  createdAt     DateTime    @default(now())
+
+  project       Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  competitor    Competitor? @relation(fields: [competitorId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, token, timeWindow], name: "project_token_unique", map: "project_token_unique")
+  @@unique([competitorId, token, timeWindow], name: "competitor_token_unique", map: "competitor_token_unique")
+  @@index([timeWindow])
+  @@map("word_cloud_tokens")
+}
+
+// =============================================================================
+// ENUMS FOR SOCIAL MEDIA TRACKING
+// =============================================================================
+
+enum ConversationSource {
+  TWITTER
+  REDDIT
+  HACKER_NEWS
+  PRODUCT_HUNT
+  FORUM
+  BLOG
+  OTHER
+}
+
+enum Sentiment {
+  POSITIVE
+  NEGATIVE
+  NEUTRAL
+}
+
+enum MetricKind {
+  VOLUME
+  SENTIMENT_POS
+  SENTIMENT_NEG
+}
+
+enum TimeWindow {
+  HOUR_24
+  HOUR_48
+  DAY_7
+  DAY_30
 }
