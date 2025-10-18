@@ -6,6 +6,29 @@ import SynchronizedAreaCharts from './SynchronizedAreaCharts'
 import GroupedWordClouds from './GroupedWordClouds'
 import ConversationSourceBreakdown from './ConversationSourceBreakdown'
 
+// Format relative time for better UX
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInMs = now.getTime() - date.getTime()
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
+  const diffInDays = Math.floor(diffInHours / 24)
+  
+  if (diffInHours < 1) {
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
+    return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`
+  } else if (diffInHours < 24) {
+    return `${diffInHours}h ago`
+  } else if (diffInDays < 7) {
+    return `${diffInDays}d ago`
+  } else if (diffInDays < 30) {
+    const weeks = Math.floor(diffInDays / 7)
+    return `${weeks}w ago`
+  } else {
+    return date.toLocaleDateString()
+  }
+}
+
 interface EntityData {
   id: string
   name: string
@@ -185,14 +208,24 @@ export default function PeopleTalkingAbout({
 
   // Filter entities based on selected source
   const filteredEntities = useMemo(() => {
-    if (!data || !selectedSource) return data?.entities || []
+    if (!data) return []
     
-    return data.entities.filter(entity => {
+    const entities = data.entities.filter(entity => {
       // This would need to be implemented based on how we want to filter
       // For now, return all entities
       return true
     })
-  }, [data, selectedSource])
+    
+    // Debug logging
+    console.log('PeopleTalkingAbout filteredEntities:', {
+      totalEntities: data.entities.length,
+      filteredEntities: entities.length,
+      selectedEntities,
+      firstEntityMetrics: entities[0]?.metrics?.length || 0
+    })
+    
+    return entities
+  }, [data, selectedSource, selectedEntities])
 
   if (isLoading) {
     return (
@@ -355,7 +388,13 @@ export default function PeopleTalkingAbout({
                     </span>
                   </div>
                   <div className="text-xs text-white/50">
-                    {mention.entity?.name} • {new Date(mention.publishedAt).toLocaleDateString()}
+                    {mention.entity?.name} • 
+                    <span 
+                      title={`Published: ${new Date(mention.publishedAt).toLocaleString()}`}
+                      className="cursor-help"
+                    >
+                      {formatRelativeTime(mention.publishedAt)}
+                    </span>
                   </div>
                 </div>
               ))}

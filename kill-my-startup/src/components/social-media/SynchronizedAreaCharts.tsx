@@ -97,6 +97,14 @@ export default function SynchronizedAreaCharts({
   onEntityToggle,
   timeRange
 }: SynchronizedAreaChartsProps) {
+  // Debug logging
+  console.log('SynchronizedAreaCharts received:', {
+    entitiesCount: entities.length,
+    selectedEntities,
+    selectedEntitiesCount: selectedEntities.length,
+    firstEntityMetrics: entities[0]?.metrics?.length || 0
+  })
+  
   const selectedEntitiesData = entities.filter(entity => selectedEntities.includes(entity.id))
 
   if (selectedEntitiesData.length === 0) {
