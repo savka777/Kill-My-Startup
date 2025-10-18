@@ -239,7 +239,7 @@ export async function POST(req: Request) {
             },
             update: { 
               frequency: { increment: frequency },
-              sentiment
+              sentiment: { set: sentiment }
             },
             create: {
               projectId: entity.id,
@@ -261,7 +261,7 @@ export async function POST(req: Request) {
             },
             update: { 
               frequency: { increment: frequency },
-              sentiment
+              sentiment: { set: sentiment }
             },
             create: {
               projectId: null,
