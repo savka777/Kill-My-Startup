@@ -225,7 +225,8 @@ export async function POST(req: Request) {
 
       for (const word of words.slice(0, 15)) {
         const frequency = Math.floor(Math.random() * 50) + 5
-        const sentiment = (Math.random() - 0.5) * 2 // -1 to 1
+        const sentimentRandom = Math.random()
+        const sentiment = sentimentRandom < 0.5 ? 'POSITIVE' : sentimentRandom < 0.8 ? 'NEUTRAL' : 'NEGATIVE' as const
         
         if (entity.type === 'project') {
           await prisma.wordCloudToken.upsert({
