@@ -1,7 +1,7 @@
 "use client"
 
-import { ShaderAnimation } from "@/components/ShaderAnimation"
-// import Prism from "@/components/Prism"
+// import { ShaderAnimation } from "@/components/ShaderAnimation"
+import Prism from "@/components/Prism"
 import { Header } from "@/components/Header"
 import { Reveal } from "@/components/Reveal"
 import { GlowingEffect } from "@/components/GlowingEffect"
@@ -15,8 +15,8 @@ export default function Page() {
 
       {/* Hero: animated background */}
       <section className="relative w-full h-screen">
-        <ShaderAnimation />
-        {/* <Prism /> */}
+        {/* <ShaderAnimation /> */}
+        <Prism />
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
           <div className="pointer-events-auto -translate-y-8 text-center px-4">
             <div className="mb-3 flex items-center justify-center gap-3">
@@ -28,7 +28,7 @@ export default function Page() {
               </span>
             </div>
             <h1 className="text-white mix-blend-difference text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tight">
-              whose killing your startup?
+              who is killing your startup?
             </h1>
             <p className="mt-4 text-white/90 mix-blend-difference text-lg md:text-2xl font-medium">
               Real-time industry intelligence and competitor tracking

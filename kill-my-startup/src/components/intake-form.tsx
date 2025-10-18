@@ -127,7 +127,7 @@ export function IntakeForm() {
       <div className="mx-auto max-w-3xl px-6 py-16">
         {/* Heading */}
         <header className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Welcome to Kill My Startup</h1>
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Welcome</h1>
           <p className="text-white/60 text-sm md:text-base mt-1">Real-time market intelligence for founders.</p>
         </header>
 

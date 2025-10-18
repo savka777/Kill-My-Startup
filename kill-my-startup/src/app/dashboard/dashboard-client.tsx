@@ -338,30 +338,7 @@ export default function DashboardClient({ user }: { user: any }) {
         )}
       </section>
 
-      {/* User's Competitors Timeline */}
-      <section id="settings" className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-medium">Your Tracked Competitors</h2>
-          <div className="text-xs text-white/60">From your intake form</div>
-        </div>
-        <div className="space-y-4">
-          {user.profile?.keyCompetitors?.map((competitorName: string, index: number) => (
-            <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-white/5">
-              <div className="w-32 flex-shrink-0">
-                <span className="text-sm font-medium text-white/90">{competitorName}</span>
-              </div>
-              <div className="flex-1 text-xs text-white/60">
-                Monitoring activity and updates...
-              </div>
-              <div className="text-xs text-green-400">Active</div>
-            </div>
-          )) || (
-            <div className="text-center py-8 text-white/60">
-              No competitors specified in your profile.
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Removed: User's Tracked Competitors section */}
 
       {/* Export Modal */}
       <ExportModal 
