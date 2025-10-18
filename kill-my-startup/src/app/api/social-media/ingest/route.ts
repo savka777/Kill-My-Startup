@@ -55,64 +55,121 @@ export async function POST(req: Request) {
           const negative = Math.floor(volume * (0.1 + Math.random() * 0.2))
 
           // Store volume metric
-          await prisma.conversationMetric.upsert({
-            where: {
-              projectId_competitorId_tsHour_kind: {
-                projectId: entity.type === 'project' ? entity.id : null,
-                competitorId: entity.type === 'competitor' ? entity.id : null,
+          if (entity.type === 'project') {
+            await prisma.conversationMetric.upsert({
+              where: {
+                project_metric_unique: {
+                  projectId: entity.id,
+                  kind: 'VOLUME',
+                  tsHour
+                }
+              },
+              update: { value: volume },
+              create: {
+                projectId: entity.id,
+                competitorId: null,
                 tsHour,
-                kind: 'VOLUME'
+                kind: 'VOLUME',
+                value: volume
               }
-            },
-            update: { value: volume },
-            create: {
-              projectId: entity.type === 'project' ? entity.id : null,
-              competitorId: entity.type === 'competitor' ? entity.id : null,
-              tsHour,
-              kind: 'VOLUME',
-              value: volume
-            }
-          })
+            })
+          } else {
+            await prisma.conversationMetric.upsert({
+              where: {
+                competitor_metric_unique: {
+                  competitorId: entity.id,
+                  kind: 'VOLUME',
+                  tsHour
+                }
+              },
+              update: { value: volume },
+              create: {
+                projectId: null,
+                competitorId: entity.id,
+                tsHour,
+                kind: 'VOLUME',
+                value: volume
+              }
+            })
+          }
 
           // Store positive sentiment metric
-          await prisma.conversationMetric.upsert({
-            where: {
-              projectId_competitorId_tsHour_kind: {
-                projectId: entity.type === 'project' ? entity.id : null,
-                competitorId: entity.type === 'competitor' ? entity.id : null,
+          if (entity.type === 'project') {
+            await prisma.conversationMetric.upsert({
+              where: {
+                project_metric_unique: {
+                  projectId: entity.id,
+                  kind: 'SENTIMENT_POS',
+                  tsHour
+                }
+              },
+              update: { value: positive },
+              create: {
+                projectId: entity.id,
+                competitorId: null,
                 tsHour,
-                kind: 'SENTIMENT_POS'
+                kind: 'SENTIMENT_POS',
+                value: positive
               }
-            },
-            update: { value: positive },
-            create: {
-              projectId: entity.type === 'project' ? entity.id : null,
-              competitorId: entity.type === 'competitor' ? entity.id : null,
-              tsHour,
-              kind: 'SENTIMENT_POS',
-              value: positive
-            }
-          })
+            })
+          } else {
+            await prisma.conversationMetric.upsert({
+              where: {
+                competitor_metric_unique: {
+                  competitorId: entity.id,
+                  kind: 'SENTIMENT_POS',
+                  tsHour
+                }
+              },
+              update: { value: positive },
+              create: {
+                projectId: null,
+                competitorId: entity.id,
+                tsHour,
+                kind: 'SENTIMENT_POS',
+                value: positive
+              }
+            })
+          }
 
           // Store negative sentiment metric
-          await prisma.conversationMetric.upsert({
-            where: {
-              projectId_competitorId_tsHour_kind: {
-                projectId: entity.type === 'project' ? entity.id : null,
-                competitorId: entity.type === 'competitor' ? entity.id : null,
+          if (entity.type === 'project') {
+            await prisma.conversationMetric.upsert({
+              where: {
+                project_metric_unique: {
+                  projectId: entity.id,
+                  kind: 'SENTIMENT_NEG',
+                  tsHour
+                }
+              },
+              update: { value: negative },
+              create: {
+                projectId: entity.id,
+                competitorId: null,
                 tsHour,
-                kind: 'SENTIMENT_NEG'
+                kind: 'SENTIMENT_NEG',
+                value: negative
               }
-            },
-            update: { value: negative },
-            create: {
-              projectId: entity.type === 'project' ? entity.id : null,
-              competitorId: entity.type === 'competitor' ? entity.id : null,
-              tsHour,
-              kind: 'SENTIMENT_NEG',
-              value: negative
-            }
-          })
+            })
+          } else {
+            await prisma.conversationMetric.upsert({
+              where: {
+                competitor_metric_unique: {
+                  competitorId: entity.id,
+                  kind: 'SENTIMENT_NEG',
+                  tsHour
+                }
+              },
+              update: { value: negative },
+              create: {
+                projectId: null,
+                competitorId: entity.id,
+                tsHour,
+                kind: 'SENTIMENT_NEG',
+                value: negative
+              }
+            })
+          }
 
           totalMetrics += 3
         }
@@ -170,28 +227,51 @@ export async function POST(req: Request) {
         const frequency = Math.floor(Math.random() * 50) + 5
         const sentiment = (Math.random() - 0.5) * 2 // -1 to 1
         
-        await prisma.wordCloudToken.upsert({
-          where: {
-            projectId_competitorId_token_timeWindow: {
-              projectId: entity.type === 'project' ? entity.id : null,
-              competitorId: entity.type === 'competitor' ? entity.id : null,
+        if (entity.type === 'project') {
+          await prisma.wordCloudToken.upsert({
+            where: {
+              project_token_unique: {
+                projectId: entity.id,
+                token: word,
+                timeWindow: 'DAY_7'
+              }
+            },
+            update: { 
+              frequency: { increment: frequency },
+              sentiment
+            },
+            create: {
+              projectId: entity.id,
+              competitorId: null,
               token: word,
+              frequency,
+              sentiment,
               timeWindow: 'DAY_7'
             }
-          },
-          update: { 
-            frequency: { increment: frequency },
-            sentiment
-          },
-          create: {
-            projectId: entity.type === 'project' ? entity.id : null,
-            competitorId: entity.type === 'competitor' ? entity.id : null,
-            token: word,
-            frequency,
-            sentiment,
-            timeWindow: 'DAY_7'
-          }
-        })
+          })
+        } else {
+          await prisma.wordCloudToken.upsert({
+            where: {
+              competitor_token_unique: {
+                competitorId: entity.id,
+                token: word,
+                timeWindow: 'DAY_7'
+              }
+            },
+            update: { 
+              frequency: { increment: frequency },
+              sentiment
+            },
+            create: {
+              projectId: null,
+              competitorId: entity.id,
+              token: word,
+              frequency,
+              sentiment,
+              timeWindow: 'DAY_7'
+            }
+          })
+        }
 
         totalTokens++
       }
