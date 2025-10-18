@@ -23,14 +23,9 @@ export async function GET(req: Request) {
     const { projectId, days = 7, includeCompetitors = true, timeWindow = 'DAY_7' } = parsed.data
     const since = subDays(new Date(), days)
 
-    // Fetch project with competitors
+    // Fetch project
     const project = await prisma.project.findUnique({
-      where: { id: projectId },
-      include: { 
-        competitors: { 
-          include: { competitor: true } 
-        } 
-      }
+      where: { id: projectId }
     })
 
     if (!project) {
@@ -43,19 +38,53 @@ export async function GET(req: Request) {
     ]
 
     if (includeCompetitors) {
-      entities.push(...project.competitors.map(pc => ({
-        id: pc.competitor.id,
-        name: pc.competitor.name,
-        type: 'competitor' as const
-      })))
+      // Get ALL active competitors from CompetitorProfile table
+      const competitors = await prisma.competitorProfile.findMany({
+        where: {
+          expiresAt: { gt: new Date() } // Only active competitors
+        },
+        orderBy: [
+          { riskLevel: 'desc' }, // CRITICAL first, then HIGH, MEDIUM, LOW
+          { createdAt: 'desc' }  // Most recent first
+        ],
+        take: 15 // Get more competitors for better coverage
+      })
+
+      // For each competitor profile, create or find the corresponding Competitor record
+      for (const compProfile of competitors) {
+        // Try to find existing competitor record
+        let competitor = await prisma.competitor.findFirst({
+          where: { name: compProfile.name }
+        })
+
+        // If not found, create one
+        if (!competitor) {
+          competitor = await prisma.competitor.create({
+            data: {
+              name: compProfile.name,
+              domain: compProfile.website,
+              active: true
+            }
+          })
+        }
+
+        entities.push({
+          id: competitor.id,
+          name: competitor.name,
+          type: 'competitor' as const
+        })
+      }
     }
+
+    // Get competitor IDs for queries
+    const competitorIds = entities.filter(e => e.type === 'competitor').map(e => e.id)
 
     // Fetch hourly metrics for all entities
     const metrics = await prisma.conversationMetric.findMany({
       where: {
         OR: [
           { projectId },
-          ...(includeCompetitors ? [{ competitor: { projects: { some: { projectId } } } }] : [])
+          ...(competitorIds.length > 0 ? [{ competitorId: { in: competitorIds } }] : [])
         ],
         tsHour: { gte: since }
       },
@@ -67,7 +96,7 @@ export async function GET(req: Request) {
       where: {
         OR: [
           { projectId },
-          ...(includeCompetitors ? [{ competitor: { projects: { some: { projectId } } } }] : [])
+          ...(competitorIds.length > 0 ? [{ competitorId: { in: competitorIds } }] : [])
         ],
         publishedAt: { gte: since }
       },
@@ -84,7 +113,7 @@ export async function GET(req: Request) {
       where: {
         OR: [
           { projectId },
-          ...(includeCompetitors ? [{ competitor: { projects: { some: { projectId } } } }] : [])
+          ...(competitorIds.length > 0 ? [{ competitorId: { in: competitorIds } }] : [])
         ],
         timeWindow
       },

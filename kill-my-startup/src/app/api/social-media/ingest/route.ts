@@ -20,28 +20,57 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'projectId required' }, { status: 400 })
     }
 
-    // Fetch project and its competitors
+    // Fetch project
     const project = await prisma.project.findUnique({
-      where: { id: projectId },
-      include: { 
-        competitors: { 
-          include: { competitor: true } 
-        } 
-      }
+      where: { id: projectId }
     })
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
+    // Get ALL active competitors from CompetitorProfile table
+    const competitors = await prisma.competitorProfile.findMany({
+      where: {
+        expiresAt: { gt: new Date() } // Only active competitors
+      },
+      orderBy: [
+        { riskLevel: 'desc' }, // CRITICAL first, then HIGH, MEDIUM, LOW
+        { createdAt: 'desc' }  // Most recent first
+      ],
+      take: 15 // Get more competitors for better coverage
+    })
+
+    // For each competitor profile, create or find the corresponding Competitor record
+    const competitorEntities = []
+    for (const compProfile of competitors) {
+      // Try to find existing competitor record
+      let competitor = await prisma.competitor.findFirst({
+        where: { name: compProfile.name }
+      })
+
+      // If not found, create one
+      if (!competitor) {
+        competitor = await prisma.competitor.create({
+          data: {
+            name: compProfile.name,
+            domain: compProfile.website,
+            active: true
+          }
+        })
+      }
+
+      competitorEntities.push({
+        id: competitor.id,
+        name: competitor.name,
+        keywords: [competitor.name],
+        isProject: false
+      })
+    }
+
     const entities = [
       { id: project.id, name: project.name, keywords: project.keywords, isProject: true },
-      ...project.competitors.map(pc => ({
-        id: pc.competitor.id,
-        name: pc.competitor.name,
-        keywords: [pc.competitor.name],
-        isProject: false
-      }))
+      ...competitorEntities
     ]
 
     let totalMentions = 0
@@ -52,33 +81,60 @@ export async function POST(req: Request) {
     for (const entity of entities) {
       console.log(`Processing ${entity.name}...`)
 
-      // Strategy 1: Twitter & Reddit (RapidAPI + Perplexity Sonar)
-      const twitterMentions = await fetchTwitterMentions(entity.name, since)
-      const redditMentions = await fetchRedditMentions(entity.name, since)
-      
-      // Filter with Sonar
-      const filteredTwitter = await filterWithSonar(twitterMentions)
-      const filteredReddit = await filterWithSonar(redditMentions)
+      // For competitors, use more generic search terms
+      const searchTerms = entity.isProject 
+        ? [entity.name] // Use exact name for projects
+        : [
+            entity.name, // Try exact name first
+            entity.name.split(' ')[0], // Try first word (e.g., "Google" from "Google (Gemini Guided Learning)")
+            entity.name.split('(')[0].trim(), // Try name without parentheses (e.g., "Google" from "Google (Gemini Guided Learning)")
+            ...entity.name.split(' ').filter(word => word.length > 3) // Try individual significant words
+          ].filter((term, index, arr) => arr.indexOf(term) === index) // Remove duplicates
 
-      // Strategy 2: Hacker News & Product Hunt (Perplexity Search)
-      const hnPhMentions = await searchSpecificSites(entity.name, [
-        'news.ycombinator.com',
-        'producthunt.com'
-      ])
+      let allMentions: any[] = []
 
-      // Strategy 3: General Social Media (Perplexity Search)
-      const generalMentions = await searchGeneralSocial(entity.name)
+      // Search with each term
+      for (const searchTerm of searchTerms) {
+        console.log(`  Searching for "${searchTerm}"...`)
 
-      // Combine all mentions
-      const allMentions = [
-        ...filteredTwitter,
-        ...filteredReddit,
-        ...hnPhMentions,
-        ...generalMentions
-      ]
+        // Strategy 1: Twitter & Reddit (RapidAPI + Perplexity Sonar)
+        const twitterMentions = await fetchTwitterMentions(searchTerm, since)
+        const redditMentions = await fetchRedditMentions(searchTerm, since)
+        
+        // Filter with Sonar
+        const filteredTwitter = await filterWithSonar(twitterMentions)
+        const filteredReddit = await filterWithSonar(redditMentions)
+
+        // Strategy 2: Hacker News & Product Hunt (Perplexity Search)
+        const hnPhMentions = await searchSpecificSites(searchTerm, [
+          'news.ycombinator.com',
+          'producthunt.com'
+        ])
+
+        // Strategy 3: General Social Media (Perplexity Search)
+        const generalMentions = await searchGeneralSocial(searchTerm)
+
+        // Combine mentions for this search term
+        const termMentions = [
+          ...filteredTwitter,
+          ...filteredReddit,
+          ...hnPhMentions,
+          ...generalMentions
+        ]
+
+        allMentions.push(...termMentions)
+        console.log(`    Found ${termMentions.length} mentions for "${searchTerm}"`)
+      }
+
+      // Remove duplicate mentions by URL
+      const uniqueMentions = allMentions.filter((mention, index, arr) => 
+        arr.findIndex(m => m.url === mention.url) === index
+      )
+
+      console.log(`  Total unique mentions for ${entity.name}: ${uniqueMentions.length}`)
 
       // Process and store mentions
-      for (const mention of allMentions) {
+      for (const mention of uniqueMentions) {
         try {
           // Analyze sentiment and extract tokens
           const sentimentResult = await analyzeSentiment(mention.text)

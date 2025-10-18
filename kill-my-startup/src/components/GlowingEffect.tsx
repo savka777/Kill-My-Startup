@@ -130,19 +130,12 @@ const GlowingEffect = memo(
         <div
           ref={containerRef}
           style={{
-            // @ts-expect-error custom props
             "--blur": `${blur}px`,
-            // @ts-expect-error custom props
             "--spread": spread,
-            // @ts-expect-error custom props
             "--start": "0",
-            // @ts-expect-error custom props
             "--active": "0",
-            // @ts-expect-error custom props
             "--glowingeffect-border-width": `${borderWidth}px`,
-            // @ts-expect-error custom props
             "--repeating-conic-gradient-times": "5",
-            // @ts-expect-error custom props
             "--gradient":
               variant === "white"
                 ? `repeating-conic-gradient(

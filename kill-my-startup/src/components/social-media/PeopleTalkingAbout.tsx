@@ -69,8 +69,8 @@ export default function PeopleTalkingAbout({
   const [timeWindow, setTimeWindow] = useState<'HOUR_24' | 'HOUR_48' | 'DAY_7' | 'DAY_30'>('DAY_7')
 
   // Fetch conversation data
-  const fetchConversationData = async (projectId: string, days: number = 7): Promise<ConversationData> => {
-    const response = await fetch(`/api/social-media/query?projectId=${projectId}&days=${days}&includeCompetitors=true`)
+  const fetchConversationData = async (projectId: string, days: number = 7, timeWindow: string = 'DAY_7'): Promise<ConversationData> => {
+    const response = await fetch(`/api/social-media/query?projectId=${projectId}&days=${days}&includeCompetitors=true&timeWindow=${timeWindow}`)
     if (!response.ok) {
       throw new Error('Failed to fetch conversation data')
     }
@@ -87,7 +87,7 @@ export default function PeopleTalkingAbout({
         },
         body: JSON.stringify({
           projectId,
-          since: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() // Last 7 days
+          since: new Date(Date.now() - selectedDays * 24 * 60 * 60 * 1000).toISOString() // Use selected days
         })
       })
 
@@ -107,9 +107,40 @@ export default function PeopleTalkingAbout({
     }
   }
 
+  const handleRefresh = async () => {
+    try {
+      console.log('Refreshing conversation data and competitors...')
+      
+      // First, refresh competitor data
+      const competitorResponse = await fetch('/api/competitors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          industry: 'AI/education', // Default industry, could be made dynamic
+          updateType: 'discovery',
+          forceRefresh: true,
+          max_results: 15
+        })
+      })
+      
+      if (competitorResponse.ok) {
+        console.log('✅ Competitor data refreshed')
+      } else {
+        console.warn('⚠️ Failed to refresh competitor data')
+      }
+      
+      // Then refresh conversation data
+      await refetch()
+      console.log('✅ Conversation data refreshed')
+      
+    } catch (error) {
+      console.error('❌ Error during refresh:', error)
+    }
+  }
+
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['conversations', projectId, selectedDays],
-    queryFn: () => fetchConversationData(projectId, selectedDays),
+    queryKey: ['conversations', projectId, selectedDays, timeWindow],
+    queryFn: () => fetchConversationData(projectId, selectedDays, timeWindow),
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
     staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes
   })
@@ -138,6 +169,18 @@ export default function PeopleTalkingAbout({
   // Handle source filter
   const handleSourceFilter = (source: string | null) => {
     setSelectedSource(source)
+  }
+
+  // Handle time range change
+  const handleTimeRangeChange = (days: number) => {
+    setSelectedDays(days)
+    // The useQuery will automatically refetch due to queryKey change
+  }
+
+  // Handle time window change
+  const handleTimeWindowChange = (window: string) => {
+    setTimeWindow(window as any)
+    // The useQuery will automatically refetch due to queryKey change
   }
 
   // Filter entities based on selected source
@@ -228,7 +271,7 @@ export default function PeopleTalkingAbout({
           {/* Time range selector */}
           <select
             value={selectedDays}
-            onChange={(e) => setSelectedDays(Number(e.target.value))}
+            onChange={(e) => handleTimeRangeChange(Number(e.target.value))}
             className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white"
           >
             <option value={1}>24h</option>
@@ -239,7 +282,7 @@ export default function PeopleTalkingAbout({
           {/* Time window selector */}
           <select
             value={timeWindow}
-            onChange={(e) => setTimeWindow(e.target.value as any)}
+            onChange={(e) => handleTimeWindowChange(e.target.value)}
             className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white"
           >
             <option value="HOUR_24">24h</option>
@@ -259,7 +302,7 @@ export default function PeopleTalkingAbout({
           
           {/* Refresh button */}
           <button
-            onClick={() => refetch()}
+            onClick={handleRefresh}
             className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white hover:bg-white/20 transition-colors"
           >
             Refresh

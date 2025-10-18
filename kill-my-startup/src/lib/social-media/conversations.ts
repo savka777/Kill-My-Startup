@@ -141,16 +141,18 @@ export async function seedConversationData() {
   
   const competitors = await Promise.all(
     competitorNames.map(async (name, index) => {
-      let competitor = await prisma.competitor.findFirst({
+      let competitor = await prisma.competitorProfile.findFirst({
         where: { name }
       })
       
       if (!competitor) {
-        competitor = await prisma.competitor.create({
+        competitor = await prisma.competitorProfile.create({
           data: {
             name,
-            domain: competitorDomains[index],
-            active: true
+            website: competitorDomains[index] ? `https://${competitorDomains[index]}` : undefined,
+            industry: 'Technology', // Default industry
+            riskLevel: 'MEDIUM',
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days TTL
           }
         })
       }

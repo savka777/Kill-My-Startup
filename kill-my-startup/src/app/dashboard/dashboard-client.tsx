@@ -14,23 +14,44 @@ export default function DashboardClient({ user }: { user: any }) {
   const [competitorFromCache, setCompetitorFromCache] = useState(false)
   const [lastFetch, setLastFetch] = useState<Date | null>(null)
   const [competitorLastFetch, setCompetitorLastFetch] = useState<Date | null>(null)
+  const [forceUpdating, setForceUpdating] = useState(false)
+  const [forceUpdatingParams, setForceUpdatingParams] = useState(false)
+  const [userProjectId, setUserProjectId] = useState<string | null>(null)
+
+  // Get user's project ID based on their profile
+  const getUserProjectId = () => {
+    if (!user.profile) return null
+    
+    // For now, we'll use a mapping approach since we have the project created
+    // In a real app, this would be stored in the user profile or fetched from API
+    const projectMapping: { [key: string]: string } = {
+      'Perplexity': 'cmgw9qomj0000ihtz0k63qsx5',
+      'Chat Socratic': 'cmgvqp51q0000ihc3b4f0d3tv' // fallback to existing project
+    }
+    
+    return projectMapping[user.profile.startupName] || 'cmgvqp51q0000ihc3b4f0d3tv'
+  }
 
   useEffect(() => {
     async function fetchData() {
+      // Get user's project ID
+      const projectId = getUserProjectId()
+      setUserProjectId(projectId)
+      
       // Use user's industry if available, otherwise default
       const industry = user.profile?.industry || 'AI/education'
       
       // Fetch news and competitors in parallel
       const [newsResult, competitorResult] = await Promise.allSettled([
-        getDashboardNews(industry, user.profile?.targetMarket),
-        getDashboardCompetitors(industry, user.profile?.startupDescription)
+        getDashboardNews(industry),
+        getDashboardCompetitors(industry)
       ])
       
       // Handle news results
       if (newsResult.status === 'fulfilled' && newsResult.value.success && newsResult.value.news) {
         setNews(newsResult.value.news)
-        setFromCache(newsResult.value.fromCache || false)
-        setLastFetch(newsResult.value.lastFetch ? new Date(newsResult.value.lastFetch) : null)
+        setFromCache(false) // News API doesn't return cache info
+        setLastFetch(new Date()) // Set current time as last fetch
       } else {
         console.error('Failed to fetch news:', newsResult.status === 'rejected' ? newsResult.reason : 'Unknown error')
       }
@@ -49,6 +70,69 @@ export default function DashboardClient({ user }: { user: any }) {
     
     fetchData()
   }, [user])
+
+  // Force update competitors (comprehensive discovery)
+  const forceUpdateCompetitors = async () => {
+    setForceUpdating(true)
+    try {
+      const industry = user.profile?.industry || 'AI/education'
+      const response = await fetch('/api/competitors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          industry,
+          updateType: 'discovery',
+          forceRefresh: true,
+          max_results: 12
+        })
+      })
+      
+      const result = await response.json()
+      if (result.success) {
+        setCompetitors(result.competitors)
+        setCompetitorFromCache(false)
+        setCompetitorLastFetch(new Date())
+        console.log('✅ Competitors force updated successfully')
+      } else {
+        console.error('❌ Failed to force update competitors:', result.error)
+      }
+    } catch (error) {
+      console.error('❌ Error force updating competitors:', error)
+    } finally {
+      setForceUpdating(false)
+    }
+  }
+
+  // Force update competitor parameters
+  const forceUpdateParameters = async () => {
+    setForceUpdatingParams(true)
+    try {
+      const industry = user.profile?.industry || 'AI/education'
+      const response = await fetch('/api/competitors/update-parameters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          industry,
+          forceRefresh: true,
+          max_results: 8
+        })
+      })
+      
+      const result = await response.json()
+      if (result.success) {
+        setCompetitors(result.competitors)
+        setCompetitorFromCache(false)
+        setCompetitorLastFetch(new Date())
+        console.log('✅ Competitor parameters force updated successfully')
+      } else {
+        console.error('❌ Failed to force update parameters:', result.error)
+      }
+    } catch (error) {
+      console.error('❌ Error force updating parameters:', error)
+    } finally {
+      setForceUpdatingParams(false)
+    }
+  }
 
   return (
     <div className="py-2 w-full">
@@ -157,6 +241,24 @@ export default function DashboardClient({ user }: { user: any }) {
               )}
             </div>
           </div>
+          
+          {/* Force Update Buttons */}
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={forceUpdateCompetitors}
+              disabled={forceUpdating}
+              className="flex-1 px-3 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:opacity-50 text-white rounded-md border border-white/10 transition-colors"
+            >
+              {forceUpdating ? 'Discovering...' : 'Force Discovery'}
+            </button>
+            <button
+              onClick={forceUpdateParameters}
+              disabled={forceUpdatingParams}
+              className="flex-1 px-3 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:opacity-50 text-white rounded-md border border-white/10 transition-colors"
+            >
+              {forceUpdatingParams ? 'Updating...' : 'Update Parameters'}
+            </button>
+          </div>
           <div className="mt-4 space-y-3 min-h-[200px] max-h-80 overflow-y-auto">
             {competitorLoading ? (
               <div className="flex items-center justify-center py-8">
@@ -248,10 +350,19 @@ export default function DashboardClient({ user }: { user: any }) {
 
       {/* People Talking About */}
       <section id="people-talking" className="mt-6">
-        <PeopleTalkingAbout 
-          projectId="cmgvqp51q0000ihc3b4f0d3tv" 
-          initialDays={7} 
-        />
+        {userProjectId ? (
+          <PeopleTalkingAbout 
+            projectId={userProjectId} 
+            initialDays={7} 
+          />
+        ) : (
+          <div className="bg-white/5 rounded-lg border border-white/10 p-6">
+            <div className="text-center">
+              <div className="text-white/60 text-sm mb-2">Loading your company data...</div>
+              <div className="text-white/40 text-xs">Setting up social media tracking for your startup</div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* User's Competitors Timeline */}

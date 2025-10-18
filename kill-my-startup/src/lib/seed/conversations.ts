@@ -131,46 +131,46 @@ export async function seedConversationData() {
 
   // Create competitors
   const competitors = await Promise.all([
-    prisma.competitor.create({
+    prisma.competitorProfile.create({
       data: {
         name: 'Google Search',
-        domain: 'google.com',
-        active: true
+        website: 'https://google.com',
+        industry: 'Search Technology',
+        description: 'Leading search engine and technology company',
+        riskLevel: 'CRITICAL',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days TTL
       }
     }),
-    prisma.competitor.create({
+    prisma.competitorProfile.create({
       data: {
         name: 'Perplexity AI',
-        domain: 'perplexity.ai',
-        active: true
+        website: 'https://perplexity.ai',
+        industry: 'AI Search',
+        description: 'AI-powered search engine and research tool',
+        riskLevel: 'HIGH',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days TTL
       }
     }),
-    prisma.competitor.create({
+    prisma.competitorProfile.create({
       data: {
         name: 'Brave Search',
-        domain: 'search.brave.com',
-        active: true
+        website: 'https://search.brave.com',
+        industry: 'Privacy-Focused Search',
+        description: 'Privacy-focused search engine',
+        riskLevel: 'MEDIUM',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days TTL
       }
     })
   ])
 
-  // Link competitors to project
-  await Promise.all(
-    competitors.map(competitor =>
-      prisma.projectCompetitor.create({
-        data: {
-          projectId: project.id,
-          competitorId: competitor.id
-        }
-      })
-    )
-  )
+  // Note: Competitors are now linked to projects via keyword/industry matching
+  // No explicit ProjectCompetitor relationships needed
 
   // Generate mentions over the last 7 days
   const now = new Date()
-  const mentions = []
-  const metrics = []
-  const wordTokens = []
+  const mentions: any[] = []
+  const metrics: any[] = []
+  const wordTokens: any[] = []
 
   for (let i = 0; i < 7; i++) {
     const day = subDays(now, i)
@@ -252,8 +252,8 @@ export async function seedConversationData() {
   // Generate word cloud tokens
   const allTokens = new Map<string, { frequency: number; sentiment: Sentiment }>()
   
-  mentions.forEach(mention => {
-    mention.tokens.forEach(token => {
+  mentions.forEach((mention: any) => {
+    mention.tokens.forEach((token: string) => {
       const key = `${token}-${mention.sentiment}`
       if (!allTokens.has(key)) {
         allTokens.set(key, { frequency: 0, sentiment: mention.sentiment })

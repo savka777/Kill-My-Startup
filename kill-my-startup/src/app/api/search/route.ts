@@ -103,9 +103,7 @@ export async function POST(request: NextRequest) {
 
     const search = await client.search.create({
       query: searchQuery,
-      max_results,
-      return_snippets: true,
-      country: "US"
+      max_results
     })
 
     console.log('Search completed, results:', search.results?.length || 0)

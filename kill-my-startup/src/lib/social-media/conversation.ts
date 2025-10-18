@@ -15,102 +15,57 @@ export interface SentimentResult {
   tokens: string[]
 }
 
-// Strategy 1: Twitter & Reddit (RapidAPI + Perplexity Sonar)
+// Strategy 1: Twitter & Reddit (Perplexity Sonar - More Reliable)
 export async function fetchTwitterMentions(keyword: string, since?: string): Promise<ConversationHit[]> {
-  const rapidApiKey = process.env.RAPIDAPI_KEY
-  const rapidApiHost = process.env.RAPIDAPI_TWITTER_HOST || 'real-time-x-com-data-scraper.p.rapidapi.com'
+  // Use Perplexity for Twitter mentions instead of deprecated RapidAPI
+  console.log(`Fetching Twitter mentions for "${keyword}" via Perplexity`)
   
-  if (!rapidApiKey) {
-    console.warn('RAPIDAPI_KEY not found, skipping Twitter mentions')
-    return []
-  }
-
   try {
-    // Build query parameters
-    const params = new URLSearchParams({
-      query: keyword,
-      section: 'top',
-      limit: '20'
-    })
-    
-    if (since) {
-      params.append('min_retweets', '0')
-      params.append('min_faves', '0')
-    }
-
-    const response = await fetch(`https://${rapidApiHost}/search?${params.toString()}`, {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Key': rapidApiKey,
-        'X-RapidAPI-Host': rapidApiHost
-      }
+    const client = new Perplexity({
+      apiKey: process.env.PERPLEXITY_API_KEY,
     })
 
-    if (!response.ok) {
-      console.warn(`Twitter API error: ${response.status}, skipping Twitter mentions`)
-      return []
-    }
+    const search = await client.search.create({
+      query: `site:twitter.com OR site:x.com "${keyword}" recent tweets`,
+      max_results: 10
+    })
 
-    const data = await response.json()
-    
-    // Transform Twitter API response to our format
-    const tweets = data.data?.tweets || data.tweets || []
-    return tweets.map((tweet: any) => ({
-      url: `https://twitter.com/user/status/${tweet.tweet_id || tweet.id}`,
-      text: tweet.text || tweet.full_text || '',
-      publishedAt: tweet.created_at || new Date().toISOString(),
+    return (search.results || []).map(result => ({
+      url: result.url,
+      text: result.snippet || result.title,
+      publishedAt: result.date || new Date().toISOString(),
       source: ConversationSource.TWITTER,
-      snippet: tweet.text || tweet.full_text || ''
+      snippet: result.snippet || result.title
     })).filter((hit: ConversationHit) => hit.text.length > 0)
   } catch (error) {
-    console.error('Error fetching Twitter mentions:', error)
+    console.error('Error fetching Twitter mentions via Perplexity:', error)
     return []
   }
 }
 
 export async function fetchRedditMentions(keyword: string, since?: string): Promise<ConversationHit[]> {
-  const rapidApiKey = process.env.RAPIDAPI_KEY
-  const rapidApiHost = process.env.RAPIDAPI_REDDIT_HOST || 'reddit34.p.rapidapi.com'
+  // Use Perplexity for Reddit mentions instead of deprecated RapidAPI
+  console.log(`Fetching Reddit mentions for "${keyword}" via Perplexity`)
   
-  if (!rapidApiKey) {
-    console.warn('RAPIDAPI_KEY not found, skipping Reddit mentions')
-    return []
-  }
-
   try {
-    // Build query parameters for Reddit search
-    const params = new URLSearchParams({
-      query: keyword,
-      sort: 'relevance',
-      limit: '20'
+    const client = new Perplexity({
+      apiKey: process.env.PERPLEXITY_API_KEY,
     })
 
-    const response = await fetch(`https://${rapidApiHost}/search?${params.toString()}`, {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Key': rapidApiKey,
-        'X-RapidAPI-Host': rapidApiHost
-      }
+    const search = await client.search.create({
+      query: `site:reddit.com "${keyword}" recent posts discussions`,
+      max_results: 10
     })
 
-    if (!response.ok) {
-      console.warn(`Reddit API error: ${response.status}, skipping Reddit mentions`)
-      return []
-    }
-
-    const data = await response.json()
-    
-    // Transform Reddit API response to our format
-    const posts = data.data || data.posts || []
-    return posts.map((post: any) => ({
-      url: post.url || `https://reddit.com${post.permalink || ''}`,
-      text: post.selftext || post.title || '',
-      publishedAt: post.created_utc ? new Date(post.created_utc * 1000).toISOString() : new Date().toISOString(),
+    return (search.results || []).map(result => ({
+      url: result.url,
+      text: result.snippet || result.title,
+      publishedAt: result.date || new Date().toISOString(),
       source: ConversationSource.REDDIT,
-      snippet: post.selftext || post.title || ''
+      snippet: result.snippet || result.title
     })).filter((hit: ConversationHit) => hit.text.length > 0)
   } catch (error) {
-    console.error('Error fetching Reddit mentions:', error)
+    console.error('Error fetching Reddit mentions via Perplexity:', error)
     return []
   }
 }
@@ -153,8 +108,6 @@ export async function searchSpecificSites(keyword: string, sites: string[]): Pro
     const search = await client.search.create({
       query: siteQuery,
       max_results: 10,
-      return_snippets: true,
-      country: 'US'
     })
 
     const results = search.results || []
@@ -194,8 +147,6 @@ export async function searchGeneralSocial(keyword: string): Promise<Conversation
     const search = await client.search.create({
       query: query,
       max_results: 10,
-      return_snippets: true,
-      country: 'US'
     })
 
     const results = search.results || []
