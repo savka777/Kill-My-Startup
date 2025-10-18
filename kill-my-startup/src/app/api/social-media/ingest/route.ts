@@ -20,11 +20,41 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    // Get active competitors
-    const competitors = await prisma.competitor.findMany({
-      where: { active: true },
-      take: 5
+    // Get active competitors from CompetitorProfile and ensure Competitor records exist
+    const competitorProfiles = await prisma.competitorProfile.findMany({
+      where: {
+        expiresAt: { gt: new Date() } // Only active competitors
+      },
+      orderBy: [
+        { riskLevel: 'desc' }, // CRITICAL first, then HIGH, MEDIUM, LOW
+        { createdAt: 'desc' }  // Most recent first
+      ],
+      take: 5 // Limit to 5 competitors for demo
     })
+
+    const competitors = []
+    
+    // For each competitor profile, create or find the corresponding Competitor record
+    for (const compProfile of competitorProfiles) {
+      // Try to find existing competitor record
+      let competitor = await prisma.competitor.findFirst({
+        where: { name: compProfile.name }
+      })
+
+      // If not found, create one
+      if (!competitor) {
+        competitor = await prisma.competitor.create({
+          data: {
+            name: compProfile.name,
+            domain: compProfile.website,
+            active: true
+          }
+        })
+        console.log(`Created competitor record for ${competitor.name}`)
+      }
+
+      competitors.push(competitor)
+    }
 
     const sinceDate = since ? new Date(since) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     const now = new Date()
@@ -34,6 +64,8 @@ export async function POST(req: Request) {
       { id: projectId, type: 'project' as const },
       ...competitors.map(c => ({ id: c.id, type: 'competitor' as const }))
     ]
+
+    console.log(`Generating social media data for ${entityIds.length} entities:`, entityIds.map(e => ({ id: e.id, type: e.type })))
 
     let totalMentions = 0
     let totalMetrics = 0
@@ -180,14 +212,18 @@ export async function POST(req: Request) {
       for (let i = 0; i < mentionCount; i++) {
         const publishedAt = new Date(now.getTime() - Math.random() * 7 * 24 * 60 * 60 * 1000)
         
+        // Get the entity name for mentions
+        const entityName = entity.type === 'project' ? project.name : 
+                          competitors.find(c => c.id === entity.id)?.name || 'this platform'
+        
         const mockTexts = [
-          `Just tried ${entity.type === 'project' ? project.name : 'this new platform'} and it's pretty impressive!`,
-          `Anyone else using ${entity.type === 'project' ? project.name : 'this tool'} for their workflow?`,
-          `The AI features in ${entity.type === 'project' ? project.name : 'this app'} are game-changing`,
-          `Comparing different options and ${entity.type === 'project' ? project.name : 'this one'} stands out`,
-          `Mixed feelings about ${entity.type === 'project' ? project.name : 'this platform'} - great concept but needs work`,
-          `Customer support at ${entity.type === 'project' ? project.name : 'this company'} is top notch`,
-          `Beta testing ${entity.type === 'project' ? project.name : 'this new feature'} and loving it so far`
+          `Just tried ${entityName} and it's pretty impressive!`,
+          `Anyone else using ${entityName} for their workflow?`,
+          `The AI features in ${entityName} are game-changing`,
+          `Comparing different options and ${entityName} stands out`,
+          `Mixed feelings about ${entityName} - great concept but needs work`,
+          `Customer support at ${entityName} is top notch`,
+          `Beta testing ${entityName} and loving it so far`
         ]
 
         const sources = ['REDDIT', 'TWITTER', 'HACKER_NEWS', 'BLOG', 'FORUM'] as const
