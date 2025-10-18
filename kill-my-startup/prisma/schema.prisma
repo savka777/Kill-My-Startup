@@ -35,6 +35,76 @@ model Feedback {
   @@map("feedback")
 }
 
+model NewsArticle {
+  id          String   @id @default(cuid())
+  title       String
+  url         String   @unique
+  date        String
+  snippet     String?
+  relevance   String
+  tag         String
+  industry    String   @default("general")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expiresAt   DateTime // TTL for cache expiration
+
+  @@map("news_articles")
+  @@index([industry, expiresAt])
+  @@index([createdAt])
+}
+
+model NewsCache {
+  id          String   @id @default(cuid())
+  cacheKey    String   @unique // industry + search params hash
+  lastFetch   DateTime @default(now())
+  expiresAt   DateTime
+  totalResults Int     @default(0)
+  
+  @@map("news_cache")
+  @@index([cacheKey, expiresAt])
+}
+
+model CompetitorProfile {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  description   String?
+  website       String?
+  industry      String
+  foundedYear   Int?
+  employeeCount String?
+  lastFunding   String?
+  fundingAmount String?
+  recentNews    String?
+  riskLevel     RiskLevel @default(MEDIUM)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  expiresAt     DateTime // TTL for data freshness
+
+  @@map("competitor_profiles")
+  @@index([industry, expiresAt])
+  @@index([name])
+}
+
+model CompetitorCache {
+  id          String   @id @default(cuid())
+  cacheKey    String   @unique // industry + context hash
+  industry    String
+  lastFetch   DateTime @default(now())
+  expiresAt   DateTime
+  totalCompetitors Int @default(0)
+  
+  @@map("competitor_cache")
+  @@index([cacheKey, expiresAt])
+  @@index([industry])
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 enum SubmissionStatus {
   PENDING
   REVIEWED

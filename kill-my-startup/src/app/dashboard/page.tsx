@@ -1,6 +1,50 @@
 "use client"
 
+import { useEffect, useState } from 'react'
+import { getDashboardNews, type NewsItem } from '@/lib/perplexity'
+import { getDashboardCompetitors, getRiskLevelColor, getRiskLevelTextColor, type CompetitorData } from '@/lib/competitors'
+
 export default function DashboardPage() {
+  const [news, setNews] = useState<NewsItem[]>([])
+  const [competitors, setCompetitors] = useState<CompetitorData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [competitorLoading, setCompetitorLoading] = useState(true)
+  const [fromCache, setFromCache] = useState(false)
+  const [competitorFromCache, setCompetitorFromCache] = useState(false)
+  const [lastFetch, setLastFetch] = useState<Date | null>(null)
+  const [competitorLastFetch, setCompetitorLastFetch] = useState<Date | null>(null)
+
+  useEffect(() => {
+    async function fetchData() {
+      // Fetch news and competitors in parallel
+      const [newsResult, competitorResult] = await Promise.allSettled([
+        getDashboardNews('AI/education'),
+        getDashboardCompetitors('AI/education')
+      ])
+      
+      // Handle news results
+      if (newsResult.status === 'fulfilled' && newsResult.value.success && newsResult.value.news) {
+        setNews(newsResult.value.news)
+        setFromCache(newsResult.value.fromCache || false)
+        setLastFetch(newsResult.value.lastFetch ? new Date(newsResult.value.lastFetch) : null)
+      } else {
+        console.error('Failed to fetch news:', newsResult.status === 'rejected' ? newsResult.reason : 'Unknown error')
+      }
+      setLoading(false)
+      
+      // Handle competitor results
+      if (competitorResult.status === 'fulfilled' && competitorResult.value.success && competitorResult.value.competitors) {
+        setCompetitors(competitorResult.value.competitors)
+        setCompetitorFromCache(competitorResult.value.fromCache || false)
+        setCompetitorLastFetch(competitorResult.value.lastFetch ? new Date(competitorResult.value.lastFetch) : null)
+      } else {
+        console.error('Failed to fetch competitors:', competitorResult.status === 'rejected' ? competitorResult.reason : 'Unknown error')
+      }
+      setCompetitorLoading(false)
+    }
+    
+    fetchData()
+  }, [])
   return (
     <div className="py-2 w-full">
       {/* Header */}
@@ -35,91 +79,126 @@ export default function DashboardPage() {
         <div className="lg:col-span-8 rounded-xl border border-white/10 bg-white/5 p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-medium">News</h2>
-            <div className="text-xs text-white/60">Related to submitted ideas</div>
+            <div className="flex items-center gap-2">
+              {fromCache && (
+                <span className="text-xs text-green-400">Cached</span>
+              )}
+              {lastFetch && (
+                <span className="text-xs text-white/60">
+                  Last updated: {lastFetch.toLocaleTimeString()}
+                </span>
+              )}
+              <div className="text-xs text-white/60">AI/Education space</div>
+            </div>
           </div>
-          <div className="mt-4 space-y-4 max-h-64 overflow-y-auto">
-            {[
-              {
-                title: "AI-powered fitness app raises $15M Series A",
-                source: "TechCrunch",
-                time: "2h ago",
-                relevance: "Matches 3 recent submissions",
-                url: "#",
-                tag: "Fitness Tech"
-              },
-              {
-                title: "Sustainable packaging startup Closed $8M funding round",
-                source: "VentureBeat",
-                time: "4h ago",
-                relevance: "Similar to EcoWrap submission",
-                url: "#",
-                tag: "Sustainability"
-              },
-              {
-                title: "Food delivery market shows 40% growth despite saturation",
-                source: "Bloomberg",
-                time: "6h ago",
-                relevance: "Relevant to 7 food delivery ideas",
-                url: "#",
-                tag: "Food Delivery"
-              },
-              {
-                title: "Remote work tools see declining user engagement",
-                source: "The Information",
-                time: "8h ago",
-                relevance: "Warning for WorkSpace Pro submission",
-                url: "#",
-                tag: "Remote Work"
-              },
-              {
-                title: "Crypto wallet security breaches increase 200%",
-                source: "CoinDesk",
-                time: "12h ago",
-                relevance: "Critical for CryptoSafe idea",
-                url: "#",
-                tag: "Crypto"
-              },
-              {
-                title: "B2B SaaS market consolidation accelerates",
-                source: "Forbes",
-                time: "1d ago",
-                relevance: "Affects 12 SaaS submissions",
-                url: "#",
-                tag: "SaaS"
-              }
-            ].map((article, index) => (
-              <div key={index} className="border-l-2 border-blue-500/30 pl-3 space-y-1">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-sm font-medium text-white/90 leading-tight">{article.title}</h3>
-                  <span className="text-xs text-white/60 whitespace-nowrap">{article.time}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/70">{article.source}</span>
-                  <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded-full">{article.tag}</span>
-                </div>
-                <div className="text-xs text-yellow-400">{article.relevance}</div>
+          <div className="mt-4 space-y-3 min-h-[200px] max-h-80 overflow-y-auto">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-white/60">Loading latest news...</div>
               </div>
-            ))}
+            ) : news.length > 0 ? (
+              news.map((article, index) => (
+                <div key={index} className="border-l-2 border-blue-500/30 pl-3 space-y-1 pb-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <a 
+                      href={article.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-white/90 leading-tight hover:text-blue-400 transition-colors"
+                    >
+                      {article.title}
+                    </a>
+                    <span className="text-xs text-white/60 whitespace-nowrap">{article.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-white/70">Live Search</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      article.tag === 'Funding' ? 'bg-green-500/20 text-green-300' :
+                      article.tag === 'AI Tech' ? 'bg-blue-500/20 text-blue-300' :
+                      article.tag === 'Risk Alert' ? 'bg-red-500/20 text-red-300' :
+                      'bg-purple-500/20 text-purple-300'
+                    }`}>
+                      {article.tag}
+                    </span>
+                  </div>
+                  <div className="text-xs text-yellow-400">{article.relevance}</div>
+                  {article.snippet && (
+                    <div className="text-xs text-white/50 line-clamp-2">{article.snippet}</div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-white/60">
+                No recent news found. Check back later.
+              </div>
+            )}
           </div>
         </div>
         <div className="lg:col-span-4 rounded-xl border border-white/10 bg-white/5 p-4">
-          <h2 className="text-base font-medium">Top Competitors</h2>
-          <div className="mt-4 space-y-3">
-            {[
-              { name: "YC Startup School", news: "Launches AI mentor program" },
-              { name: "AngelList", news: "Raises $100M Series D" },
-              { name: "Product Hunt", news: "New discovery algorithm" },
-              { name: "Indie Hackers", news: "Acquired by Stripe" },
-              { name: "StartupGrind", news: "Expands to 50 cities" }
-            ].map((competitor) => (
-              <div key={competitor.name} className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-white/80 font-medium">{competitor.name}</span>
-                  <div className="h-1 w-16 rounded bg-red-500/50" />
-                </div>
-                <div className="text-xs text-white/50">{competitor.news}</div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-medium">Top Competitors</h2>
+            <div className="flex items-center gap-2">
+              {competitorFromCache && (
+                <span className="text-xs text-green-400">Cached</span>
+              )}
+              {competitorLastFetch && (
+                <span className="text-xs text-white/60">
+                  {competitorLastFetch.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="mt-4 space-y-3 min-h-[200px] max-h-80 overflow-y-auto">
+            {competitorLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-white/60">Analyzing competitors...</div>
               </div>
-            ))}
+            ) : competitors.length > 0 ? (
+              competitors.map((competitor) => (
+                <div key={competitor.id} className="space-y-2 border-b border-white/5 pb-3 last:border-b-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-white/80 font-medium">{competitor.name}</span>
+                      <div className={`h-1.5 w-1.5 rounded-full ${getRiskLevelColor(competitor.riskLevel)}`} />
+                    </div>
+                    <span className={`text-xs font-medium ${getRiskLevelTextColor(competitor.riskLevel)}`}>
+                      {competitor.riskLevel}
+                    </span>
+                  </div>
+                  
+                  {competitor.description && (
+                    <div className="text-xs text-white/60 line-clamp-2">{competitor.description}</div>
+                  )}
+                  
+                  {competitor.recentNews && (
+                    <div className="text-xs text-white/50 line-clamp-1 italic">{competitor.recentNews}</div>
+                  )}
+                  
+                  <div className="flex items-center gap-3 text-xs text-white/40">
+                    {competitor.lastFunding && (
+                      <span className="bg-blue-500/10 text-blue-300 px-1.5 py-0.5 rounded">{competitor.lastFunding}</span>
+                    )}
+                    {competitor.fundingAmount && (
+                      <span className="text-green-400 font-medium">{competitor.fundingAmount}</span>
+                    )}
+                    {competitor.website && (
+                      <a 
+                        href={`https://${competitor.website}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="hover:text-blue-400 transition-colors truncate max-w-24"
+                      >
+                        {competitor.website}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-white/60">
+                No competitors found. Market might be wide open!
+              </div>
+            )}
           </div>
         </div>
       </section>
