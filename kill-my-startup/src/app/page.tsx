@@ -1,7 +1,7 @@
 "use client"
 
 import { ShaderAnimation } from "@/components/ShaderAnimation"
-import Prism from "@/components/Prism"
+// import Prism from "@/components/Prism"
 import { Header } from "@/components/Header"
 import { Reveal } from "@/components/Reveal"
 import { GlowingEffect } from "@/components/GlowingEffect"
