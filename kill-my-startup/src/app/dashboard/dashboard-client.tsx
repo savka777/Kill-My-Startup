@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getDashboardNews, type NewsItem } from '@/lib/perplexity'
 import { getDashboardCompetitors, getRiskLevelColor, getRiskLevelTextColor, type CompetitorData } from '@/lib/competitors'
 import PeopleTalkingAbout from '@/components/social-media/PeopleTalkingAbout'
+import { ExportModal } from '@/components/ExportModal'
 
 export default function DashboardClient({ user }: { user: any }) {
   const [news, setNews] = useState<NewsItem[]>([])
@@ -17,6 +18,7 @@ export default function DashboardClient({ user }: { user: any }) {
   const [forceUpdating, setForceUpdating] = useState(false)
   const [forceUpdatingParams, setForceUpdatingParams] = useState(false)
   const [userProjectId, setUserProjectId] = useState<string | null>(null)
+  const [showExportModal, setShowExportModal] = useState(false)
 
   // Get user's project ID based on their profile
   const getUserProjectId = () => {
@@ -139,7 +141,7 @@ export default function DashboardClient({ user }: { user: any }) {
       {/* Header */}
       <header className="flex items-center justify-between pb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+          <h1 className="text-xl md:text-2xl font-semibold tracking-tight">
             Welcome back, {user.firstName || 'there'}! 
           </h1>
           <p className="text-white/60 text-sm md:text-base mt-1">
@@ -147,17 +149,21 @@ export default function DashboardClient({ user }: { user: any }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="rounded-full bg-white text-black px-4 py-1.5 text-sm font-medium hover:bg-white/90 transition-colors">Export</button>
+          <button 
+            onClick={() => setShowExportModal(true)}
+            className="rounded-full bg-white text-black px-4 py-1.5 text-sm font-medium hover:bg-white/90 transition-colors"
+          >
+            Export
+          </button>
         </div>
       </header>
 
       {/* KPI cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
           { label: "News Articles", value: news.length.toString() },
           { label: "Competitors Tracked", value: competitors.length.toString() },
           { label: "Target Market", value: user.profile?.targetMarket ? "Set" : "Not Set" },
-          { label: "Keywords Monitored", value: user.profile?.alertKeywords?.length?.toString() || "0" },
         ].map((k) => (
           <div key={k.label} className="rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="text-xs text-white/60">{k.label}</div>
@@ -314,39 +320,6 @@ export default function DashboardClient({ user }: { user: any }) {
         </div>
       </section>
 
-      {/* Two-up grid */}
-      <section id="reports" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <h2 className="text-base font-medium">Your Goals</h2>
-          <div className="mt-4 space-y-3">
-            {user.profile?.primaryGoals?.map((goal: string, index: number) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm text-white/80">{goal}</span>
-                <span className="text-xs text-green-400">Active</span>
-              </div>
-            )) || (
-              <div className="text-center py-4 text-white/60">
-                No goals set. Update your profile to set goals.
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <h2 className="text-base font-medium">Monitored Keywords</h2>
-          <div className="mt-4 space-y-3">
-            {user.profile?.alertKeywords?.map((keyword: string, index: number) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm text-white/80">{keyword}</span>
-                <span className="text-xs text-blue-400">Tracking</span>
-              </div>
-            )) || (
-              <div className="text-center py-4 text-white/60">
-                No keywords being monitored.
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
 
       {/* People Talking About */}
       <section id="people-talking" className="mt-6">
@@ -389,6 +362,12 @@ export default function DashboardClient({ user }: { user: any }) {
           )}
         </div>
       </section>
+
+      {/* Export Modal */}
+      <ExportModal 
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+      />
     </div>
   )
 }

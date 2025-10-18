@@ -253,6 +253,23 @@ Focus on ${max_results} key competitors with recent updates.`
   return await parseCompetitorJSON(contentString || '[]', industry)
 }
 
+function extractKeywords(description: string): string[] {
+  if (!description) return []
+  
+  // Remove common startup words and extract meaningful terms
+  const commonWords = [
+    'startup', 'company', 'platform', 'app', 'tool', 'software', 'service', 'solution',
+    'building', 'creating', 'developing', 'making', 'helps', 'allows', 'enables',
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'
+  ]
+  
+  return description
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(word => word.length > 3 && !commonWords.includes(word))
+    .slice(0, 2) // Take top 2 meaningful terms for similarity
+}
+
 async function parseCompetitorJSON(
   jsonResponse: string, 
   industry: string
