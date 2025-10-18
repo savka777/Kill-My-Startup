@@ -10,8 +10,8 @@ export function Header() {
             <Image
               src="/logo.svg"
               alt="Kill My Startup logo"
-              width={24}
-              height={24}
+              width={40}
+              height={40}
               priority
               className="mix-blend-difference"
             />

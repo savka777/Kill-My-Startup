@@ -57,7 +57,7 @@ export default function DashboardClient({ user }: { user: any }) {
       {/* Header */}
       <header className="flex items-center justify-between pb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+          <h1 className="text-xl md:text-2xl font-semibold tracking-tight">
             Welcome back, {user.firstName || 'there'}! 
           </h1>
           <p className="text-white/60 text-sm md:text-base mt-1">

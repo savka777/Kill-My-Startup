@@ -14,33 +14,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="mx-auto max-w-[1400px] px-4 md:px-6 py-4 flex gap-4">
+      <div className="mx-auto max-w-[1400px] px-2 md:px-4 py-4 flex gap-2">
         <Sidebar>
           <SidebarBody>
             <div className="flex-1">
-              {/* Desktop Logo */}
-              <div className="mb-8 hidden md:flex items-center justify-center py-2">
-                <Image
-                  src="/logo.svg"
-                  alt="Kill My Startup logo"
-                  width={48}
-                  height={48}
-                  priority
-                  className="transition-all duration-200"
-                />
-              </div>
-              
-              {/* Mobile Logo */}
-              <div className="mb-6 flex md:hidden items-center justify-center py-4">
-                <Image
-                  src="/logo.svg"
-                  alt="Kill My Startup logo"
-                  width={40}
-                  height={40}
-                  priority
-                />
-              </div>
-              
               <div className="flex flex-col">
                 {links.map((l) => (
                   <SidebarLink key={l.href} link={l} />
