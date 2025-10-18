@@ -30,49 +30,106 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User profile not found" }, { status: 404 })
     }
 
-    // Fetch news and competitor data directly using cache/database
-    let news: any[] = []
-    let competitors: any[] = []
-    let newsAnalysisText: string | null = null
+    // Use mock data for demo
+    const news: any[] = [
+      {
+        title: "AI Startup Raises $50M Series B to Revolutionize Education",
+        url: "https://example.com/news1",
+        date: "2024-10-18",
+        snippet: "Leading EdTech company secures major funding round to expand AI-powered learning platform globally.",
+        relevance: "Direct competitor funding activity",
+        tag: "Funding"
+      },
+      {
+        title: "New Study Shows 40% Growth in EdTech Market",
+        url: "https://example.com/news2", 
+        date: "2024-10-17",
+        snippet: "Market research indicates strong demand for personalized learning solutions in education sector.",
+        relevance: `${user.profile.industry} industry trends`,
+        tag: "Market Analysis"
+      },
+      {
+        title: "ChatGPT Integration Transforms Classroom Learning",
+        url: "https://example.com/news3",
+        date: "2024-10-16", 
+        snippet: "Educational institutions report improved student engagement with AI-powered tutoring systems.",
+        relevance: "AI technology adoption in education",
+        tag: "AI Tech"
+      },
+      {
+        title: "Startup Failure: LearningBot Shuts Down After 2 Years",
+        url: "https://example.com/news4",
+        date: "2024-10-15",
+        snippet: "EdTech startup closes due to poor user retention and funding challenges.",
+        relevance: "Warning signal for industry",
+        tag: "Risk Alert"
+      },
+      {
+        title: "Microsoft Launches New Education AI Platform",
+        url: "https://example.com/news5",
+        date: "2024-10-14",
+        snippet: "Tech giant enters education market with comprehensive AI-powered learning suite.",
+        relevance: "Big tech competition entering market",
+        tag: "Competitor News"
+      }
+    ]
 
-    try {
-      // Import cache functions directly
-      const { NewsCache } = await import('@/lib/news-cache')
-      const { CompetitorCache } = await import('@/lib/competitor-cache')
-      
-      // Try to get cached news data
-      const cachedNews = await NewsCache.getCachedNews({
+    const competitors: any[] = [
+      {
+        id: "comp1",
+        name: "EduGenius AI",
+        description: "AI-powered personalized learning platform for K-12 students",
+        website: "edugenius.com",
         industry: user.profile.industry,
-        userInfo: user.profile.startupName,
-        context: user.profile.startupDescription,
-        ttlHours: 24 // Accept up to 24 hour old cache for exports
-      })
-
-      if (cachedNews && cachedNews.articles.length > 0) {
-        news = cachedNews.articles.slice(0, 15) // Limit to 15 for export
-        console.log(`Using ${news.length} cached news articles for export`)
-      }
-
-      // Try to get cached competitor data
-      const cachedCompetitors = await CompetitorCache.getCachedCompetitors({
+        foundedYear: 2021,
+        employeeCount: "50-100",
+        lastFunding: "Series A",
+        fundingAmount: "$15M",
+        recentNews: "Partnered with 500+ schools nationwide",
+        riskLevel: "HIGH"
+      },
+      {
+        id: "comp2", 
+        name: "SmartTutor Pro",
+        description: "Adaptive tutoring system using machine learning algorithms",
+        website: "smarttutor.pro",
         industry: user.profile.industry,
-        context: user.profile.startupDescription,
-        userInfo: user.profile.startupName,
-        ttlHours: 24 // Accept up to 24 hour old cache for exports
-      })
-
-      if (cachedCompetitors && cachedCompetitors.competitors.length > 0) {
-        competitors = cachedCompetitors.competitors.slice(0, 8) // Limit to 8 for export
-        console.log(`Using ${competitors.length} cached competitors for export`)
+        foundedYear: 2020,
+        employeeCount: "25-50", 
+        lastFunding: "Seed",
+        fundingAmount: "$5M",
+        recentNews: "Launched mobile app with 100K+ downloads",
+        riskLevel: "MEDIUM"
+      },
+      {
+        id: "comp3",
+        name: "LearnBot Studios", 
+        description: "Conversational AI for interactive educational content",
+        website: "learnbot.studios",
+        industry: user.profile.industry,
+        foundedYear: 2022,
+        employeeCount: "10-25",
+        lastFunding: "Pre-seed", 
+        fundingAmount: "$2M",
+        recentNews: "Beta testing with select universities",
+        riskLevel: "LOW"
+      },
+      {
+        id: "comp4",
+        name: "ClassroomAI",
+        description: "Enterprise AI solutions for educational institutions",
+        website: "classroom.ai",
+        industry: user.profile.industry,
+        foundedYear: 2019,
+        employeeCount: "100-250",
+        lastFunding: "Series B",
+        fundingAmount: "$30M", 
+        recentNews: "Acquired by Pearson Education",
+        riskLevel: "CRITICAL"
       }
+    ]
 
-      // Generate basic analysis text if we have news
-      if (news.length > 0) {
-        newsAnalysisText = `Analysis based on ${news.length} recent articles in ${user.profile.industry} industry.`
-      }
-    } catch (error) {
-      console.error('Error fetching cached data for export:', error)
-    }
+    const newsAnalysisText = `Analysis based on ${news.length} recent articles in ${user.profile.industry} industry. Market shows strong growth with significant funding activity, but also notable risks with recent startup failures. Big tech companies are entering the space, increasing competition.`
 
     // Generate report data
     const reportData = generateReportData(user, news, competitors)
