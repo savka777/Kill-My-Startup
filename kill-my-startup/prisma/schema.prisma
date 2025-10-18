@@ -257,3 +257,66 @@ enum TimeWindow {
   DAY_7
   DAY_30
 }
+
+// =============================================================================
+// USER PROFILE AND INTAKE MODELS
+// =============================================================================
+
+model User {
+  id          String   @id @default(cuid())
+  clerkId     String   @unique // Clerk user ID
+  email       String   @unique
+  firstName   String?
+  lastName    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Intake form completion
+  hasCompletedIntake Boolean @default(false)
+  
+  // User profile and startup info
+  profile     UserProfile?
+  
+  @@map("users")
+}
+
+model UserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Startup Information
+  startupName        String
+  startupDescription String
+  industry          String
+  stage             StartupStage
+  teamSize          Int?
+  monthlyRevenue    String? // e.g., "$0", "$1-10K", "$10K-50K", etc.
+  fundingRaised     String? // e.g., "None", "<$100K", "$100K-1M", etc.
+  
+  // Market Intelligence Preferences
+  targetMarket      String   // Primary target market/customer segment
+  keyCompetitors    String[] // List of known competitors
+  primaryGoals      String[] // What they want to achieve with market intelligence
+  alertKeywords     String[] // Keywords to monitor for alerts
+  
+  // Contact and business info
+  website           String?
+  linkedinUrl       String?
+  location          String?
+  timezone          String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@map("user_profiles")
+}
+
+enum StartupStage {
+  IDEA
+  VALIDATING
+  BUILDING_MVP
+  LAUNCHED
+  SCALING
+  ESTABLISHED
+}

@@ -1,4 +1,5 @@
 import { ConversationSource, Sentiment } from '@prisma/client'
+import Perplexity from '@perplexity-ai/perplexity_ai'
 
 export interface ConversationHit {
   url: string
@@ -17,7 +18,7 @@ export interface SentimentResult {
 // Strategy 1: Twitter & Reddit (RapidAPI + Perplexity Sonar)
 export async function fetchTwitterMentions(keyword: string, since?: string): Promise<ConversationHit[]> {
   const rapidApiKey = process.env.RAPIDAPI_KEY
-  const rapidApiHost = process.env.RAPIDAPI_TWITTER_HOST || 'twitter-api-v2.p.rapidapi.com'
+  const rapidApiHost = process.env.RAPIDAPI_TWITTER_HOST || 'real-time-x-com-data-scraper.p.rapidapi.com'
   
   if (!rapidApiKey) {
     console.warn('RAPIDAPI_KEY not found, skipping Twitter mentions')
@@ -25,7 +26,19 @@ export async function fetchTwitterMentions(keyword: string, since?: string): Pro
   }
 
   try {
-    const response = await fetch(`https://${rapidApiHost}/search`, {
+    // Build query parameters
+    const params = new URLSearchParams({
+      query: keyword,
+      section: 'top',
+      limit: '20'
+    })
+    
+    if (since) {
+      params.append('min_retweets', '0')
+      params.append('min_faves', '0')
+    }
+
+    const response = await fetch(`https://${rapidApiHost}/search?${params.toString()}`, {
       method: 'GET',
       headers: {
         'X-RapidAPI-Key': rapidApiKey,
@@ -34,19 +47,21 @@ export async function fetchTwitterMentions(keyword: string, since?: string): Pro
     })
 
     if (!response.ok) {
-      throw new Error(`Twitter API error: ${response.status}`)
+      console.warn(`Twitter API error: ${response.status}, skipping Twitter mentions`)
+      return []
     }
 
     const data = await response.json()
     
     // Transform Twitter API response to our format
-    return data.tweets?.map((tweet: any) => ({
-      url: `https://twitter.com/user/status/${tweet.id}`,
-      text: tweet.text,
-      publishedAt: tweet.created_at,
+    const tweets = data.data?.tweets || data.tweets || []
+    return tweets.map((tweet: any) => ({
+      url: `https://twitter.com/user/status/${tweet.tweet_id || tweet.id}`,
+      text: tweet.text || tweet.full_text || '',
+      publishedAt: tweet.created_at || new Date().toISOString(),
       source: ConversationSource.TWITTER,
-      snippet: tweet.text
-    })) || []
+      snippet: tweet.text || tweet.full_text || ''
+    })).filter((hit: ConversationHit) => hit.text.length > 0)
   } catch (error) {
     console.error('Error fetching Twitter mentions:', error)
     return []
@@ -55,7 +70,7 @@ export async function fetchTwitterMentions(keyword: string, since?: string): Pro
 
 export async function fetchRedditMentions(keyword: string, since?: string): Promise<ConversationHit[]> {
   const rapidApiKey = process.env.RAPIDAPI_KEY
-  const rapidApiHost = process.env.RAPIDAPI_REDDIT_HOST || 'reddit-data1.p.rapidapi.com'
+  const rapidApiHost = process.env.RAPIDAPI_REDDIT_HOST || 'reddit34.p.rapidapi.com'
   
   if (!rapidApiKey) {
     console.warn('RAPIDAPI_KEY not found, skipping Reddit mentions')
@@ -63,7 +78,14 @@ export async function fetchRedditMentions(keyword: string, since?: string): Prom
   }
 
   try {
-    const response = await fetch(`https://${rapidApiHost}/search`, {
+    // Build query parameters for Reddit search
+    const params = new URLSearchParams({
+      query: keyword,
+      sort: 'relevance',
+      limit: '20'
+    })
+
+    const response = await fetch(`https://${rapidApiHost}/search?${params.toString()}`, {
       method: 'GET',
       headers: {
         'X-RapidAPI-Key': rapidApiKey,
@@ -72,19 +94,21 @@ export async function fetchRedditMentions(keyword: string, since?: string): Prom
     })
 
     if (!response.ok) {
-      throw new Error(`Reddit API error: ${response.status}`)
+      console.warn(`Reddit API error: ${response.status}, skipping Reddit mentions`)
+      return []
     }
 
     const data = await response.json()
     
     // Transform Reddit API response to our format
-    return data.posts?.map((post: any) => ({
-      url: `https://reddit.com${post.permalink}`,
-      text: post.selftext || post.title,
-      publishedAt: new Date(post.created_utc * 1000).toISOString(),
+    const posts = data.data || data.posts || []
+    return posts.map((post: any) => ({
+      url: post.url || `https://reddit.com${post.permalink || ''}`,
+      text: post.selftext || post.title || '',
+      publishedAt: post.created_utc ? new Date(post.created_utc * 1000).toISOString() : new Date().toISOString(),
       source: ConversationSource.REDDIT,
-      snippet: post.selftext || post.title
-    })) || []
+      snippet: post.selftext || post.title || ''
+    })).filter((hit: ConversationHit) => hit.text.length > 0)
   } catch (error) {
     console.error('Error fetching Reddit mentions:', error)
     return []
@@ -92,60 +116,21 @@ export async function fetchRedditMentions(keyword: string, since?: string): Prom
 }
 
 export async function filterWithSonar(hits: ConversationHit[]): Promise<ConversationHit[]> {
-  const perplexityApiKey = process.env.PERPLEXITY_API_KEY
+  // For now, just return the hits as filtering is done by the other functions
+  // We can implement more sophisticated filtering later if needed
+  if (hits.length === 0) {
+    return hits
+  }
   
-  if (!perplexityApiKey) {
-    console.warn('PERPLEXITY_API_KEY not found, skipping Sonar filtering')
-    return hits
-  }
-
-  try {
-    // Use Perplexity Sonar to filter and analyze the hits
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${perplexityApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'sonar-medium-online',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a content filter. Analyze the following social media posts and return only those that are relevant to the given keyword. Return a JSON array of relevant posts with their URLs and text content.'
-          },
-          {
-            role: 'user',
-            content: `Filter these posts for relevance to the keyword. Return only relevant posts:\n\n${JSON.stringify(hits)}`
-          }
-        ],
-        max_tokens: 2000,
-        temperature: 0.1
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error(`Perplexity API error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    const filteredContent = data.choices[0]?.message?.content
-    
-    if (!filteredContent) {
-      return hits
-    }
-
-    // Parse the filtered results (this would need to be adapted based on actual Sonar response format)
-    try {
-      const filtered = JSON.parse(filteredContent)
-      return Array.isArray(filtered) ? filtered : hits
-    } catch {
-      return hits
-    }
-  } catch (error) {
-    console.error('Error filtering with Sonar:', error)
-    return hits
-  }
+  // Simple relevance filtering based on text content
+  return hits.filter(hit => {
+    const text = hit.text.toLowerCase()
+    // Filter out very short posts or obvious spam
+    return text.length > 10 && 
+           !text.includes('bot') && 
+           !text.includes('spam') &&
+           !text.includes('advertisement')
+  })
 }
 
 // Strategy 2: Hacker News & Product Hunt (Perplexity Search)
@@ -158,55 +143,31 @@ export async function searchSpecificSites(keyword: string, sites: string[]): Pro
   }
 
   try {
-    const siteQueries = sites.map(site => `site:${site} ${keyword}`).join(' OR ')
+    // Use Perplexity SDK for site-specific queries
+    const client = new Perplexity({
+      apiKey: perplexityApiKey,
+    })
     
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${perplexityApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'sonar-medium-online',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a search assistant. Find recent posts and discussions about the given keyword on the specified websites. Return a JSON array with url, text, publishedAt, and source fields.'
-          },
-          {
-            role: 'user',
-            content: `Search for: ${keyword}\nOn sites: ${sites.join(', ')}\n\nReturn recent posts and discussions.`
-          }
-        ],
-        max_tokens: 2000,
-        temperature: 0.1
-      })
+    const siteQuery = sites.map(site => `site:${site} ${keyword}`).join(' OR ')
+    
+    const search = await client.search.create({
+      query: siteQuery,
+      max_results: 10,
+      return_snippets: true,
+      country: 'US'
     })
 
-    if (!response.ok) {
-      throw new Error(`Perplexity API error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    const searchResults = data.choices[0]?.message?.content
+    const results = search.results || []
     
-    if (!searchResults) {
-      return []
-    }
-
-    // Parse and transform results
-    try {
-      const results = JSON.parse(searchResults)
-      return Array.isArray(results) ? results.map((result: any) => ({
-        url: result.url,
-        text: result.text,
-        publishedAt: result.publishedAt || new Date().toISOString(),
-        source: result.source === 'hackernews' ? ConversationSource.HACKER_NEWS : ConversationSource.PRODUCT_HUNT,
-        snippet: result.text
-      })) : []
-    } catch {
-      return []
-    }
+    return results.map((result: any) => ({
+      url: result.url || '',
+      text: result.snippet || result.title || '',
+      publishedAt: result.date || new Date().toISOString(),
+      source: result.url?.includes('news.ycombinator.com') ? ConversationSource.HACKER_NEWS : 
+              result.url?.includes('producthunt.com') ? ConversationSource.PRODUCT_HUNT : 
+              ConversationSource.OTHER,
+      snippet: result.snippet || result.title || ''
+    })).filter((hit: ConversationHit) => hit.text.length > 10)
   } catch (error) {
     console.error('Error searching specific sites:', error)
     return []
@@ -223,54 +184,31 @@ export async function searchGeneralSocial(keyword: string): Promise<Conversation
   }
 
   try {
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${perplexityApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'sonar-medium-online',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a social media search assistant. Find recent discussions, posts, and mentions about the given keyword across various social media platforms, forums, and blogs. Exclude Twitter, Reddit, Hacker News, and Product Hunt as these are covered separately. Return a JSON array with url, text, publishedAt, and source fields.'
-          },
-          {
-            role: 'user',
-            content: `Search for social media discussions about: ${keyword}\n\nFind posts on forums, blogs, LinkedIn, and other social platforms. Exclude Twitter, Reddit, Hacker News, and Product Hunt.`
-          }
-        ],
-        max_tokens: 2000,
-        temperature: 0.1
-      })
+    // Use Perplexity SDK for general social search
+    const client = new Perplexity({
+      apiKey: perplexityApiKey,
+    })
+    
+    const query = `${keyword} discussions forums blogs -site:twitter.com -site:reddit.com -site:news.ycombinator.com -site:producthunt.com`
+    
+    const search = await client.search.create({
+      query: query,
+      max_results: 10,
+      return_snippets: true,
+      country: 'US'
     })
 
-    if (!response.ok) {
-      throw new Error(`Perplexity API error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    const searchResults = data.choices[0]?.message?.content
+    const results = search.results || []
     
-    if (!searchResults) {
-      return []
-    }
-
-    // Parse and transform results
-    try {
-      const results = JSON.parse(searchResults)
-      return Array.isArray(results) ? results.map((result: any) => ({
-        url: result.url,
-        text: result.text,
-        publishedAt: result.publishedAt || new Date().toISOString(),
-        source: result.source === 'forum' ? ConversationSource.FORUM : 
-                result.source === 'blog' ? ConversationSource.BLOG : ConversationSource.OTHER,
-        snippet: result.text
-      })) : []
-    } catch {
-      return []
-    }
+    return results.map((result: any) => ({
+      url: result.url || '',
+      text: result.snippet || result.title || '',
+      publishedAt: result.date || new Date().toISOString(),
+      source: result.url?.includes('forum') || result.url?.includes('community') ? ConversationSource.FORUM : 
+              result.url?.includes('blog') || result.url?.includes('medium.com') ? ConversationSource.BLOG : 
+              ConversationSource.OTHER,
+      snippet: result.snippet || result.title || ''
+    })).filter((hit: ConversationHit) => hit.text.length > 10)
   } catch (error) {
     console.error('Error searching general social media:', error)
     return []
@@ -279,62 +217,9 @@ export async function searchGeneralSocial(keyword: string): Promise<Conversation
 
 // Sentiment & Token Extraction
 export async function analyzeSentiment(text: string): Promise<SentimentResult> {
-  const perplexityApiKey = process.env.PERPLEXITY_API_KEY
-  
-  if (!perplexityApiKey) {
-    // Fallback to simple rule-based sentiment analysis
-    return analyzeSentimentFallback(text)
-  }
-
-  try {
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${perplexityApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'sonar-medium-online',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a sentiment analysis expert. Analyze the sentiment of the given text and extract key tokens. Return a JSON object with sentiment (POSITIVE/NEGATIVE/NEUTRAL), score (-1 to 1), and tokens (array of important words).'
-          },
-          {
-            role: 'user',
-            content: `Analyze sentiment and extract tokens from: "${text}"`
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.1
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error(`Perplexity API error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    const analysis = data.choices[0]?.message?.content
-    
-    if (!analysis) {
-      return analyzeSentimentFallback(text)
-    }
-
-    try {
-      const result = JSON.parse(analysis)
-      return {
-        sentiment: result.sentiment || Sentiment.NEUTRAL,
-        score: result.score || 0,
-        tokens: result.tokens || []
-      }
-    } catch {
-      return analyzeSentimentFallback(text)
-    }
-  } catch (error) {
-    console.error('Error analyzing sentiment with Perplexity:', error)
-    return analyzeSentimentFallback(text)
-  }
+  // Use simple rule-based sentiment analysis for now
+  // This is faster and more reliable than API calls for sentiment analysis
+  return analyzeSentimentFallback(text)
 }
 
 function analyzeSentimentFallback(text: string): SentimentResult {
