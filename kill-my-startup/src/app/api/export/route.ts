@@ -31,9 +31,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch news and competitor data directly using cache/database
-    let news = []
-    let competitors = []
-    let newsAnalysisText = null
+    let news: any[] = []
+    let competitors: any[] = []
+    let newsAnalysisText: string | null = null
 
     try {
       // Import cache functions directly
