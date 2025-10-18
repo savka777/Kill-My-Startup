@@ -323,7 +323,7 @@ const Prism = ({
 
     let onPointerMove = null;
     if (animationType === "hover") {
-      onPointerMove = (e) => {
+      onPointerMove = (e: MouseEvent) => {
         onMove(e);
         startRAF();
       };
@@ -337,7 +337,7 @@ const Prism = ({
       program.uniforms.uUseBaseWobble.value = 1;
     }
 
-    const render = (t) => {
+    const render = (t: number) => {
       const time = (t - t0) * 0.001;
       program.uniforms.iTime.value = time;
 
@@ -410,7 +410,7 @@ const Prism = ({
       });
       io.observe(container);
       startRAF();
-      container.__prismIO = io;
+      (container as any).__prismIO = io;
     } else {
       startRAF();
     }
@@ -428,9 +428,9 @@ const Prism = ({
         window.removeEventListener("blur", onBlur);
       }
       if (suspendWhenOffscreen) {
-        const io = container.__prismIO
+        const io = (container as any).__prismIO
         if (io) io.disconnect();
-        delete container.__prismIO;
+        delete (container as any).__prismIO;
       }
       if (gl.canvas.parentElement === container)
         container.removeChild(gl.canvas);
