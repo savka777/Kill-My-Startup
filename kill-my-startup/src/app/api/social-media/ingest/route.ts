@@ -190,8 +190,8 @@ export async function POST(req: Request) {
           `Beta testing ${entity.type === 'project' ? project.name : 'this new feature'} and loving it so far`
         ]
 
-        const sources = ['reddit', 'twitter', 'hackernews', 'discord', 'linkedin']
-        const sentiments = ['positive', 'negative', 'neutral']
+        const sources = ['REDDIT', 'TWITTER', 'HACKER_NEWS', 'BLOG', 'FORUM'] as const
+        const sentiments = ['POSITIVE', 'NEGATIVE', 'NEUTRAL'] as const
         
         const text = mockTexts[Math.floor(Math.random() * mockTexts.length)]
         const source = sources[Math.floor(Math.random() * sources.length)]
@@ -205,8 +205,8 @@ export async function POST(req: Request) {
             text,
             source,
             sentiment,
-            sentimentScore: sentiment === 'positive' ? 0.7 + Math.random() * 0.3 : 
-                           sentiment === 'negative' ? -0.7 - Math.random() * 0.3 : 
+            sentimentScore: sentiment === 'POSITIVE' ? 0.7 + Math.random() * 0.3 : 
+                           sentiment === 'NEGATIVE' ? -0.7 - Math.random() * 0.3 : 
                            -0.2 + Math.random() * 0.4,
             publishedAt
           }
