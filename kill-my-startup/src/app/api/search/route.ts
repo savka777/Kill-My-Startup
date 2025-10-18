@@ -159,27 +159,30 @@ async function fetchCompetitors(userProfile: UserProfile): Promise<string[]> {
   try {
     const { startupDescription, industry } = userProfile
     
-    // Call the competitors API
-    const competitorResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/competitors`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        industry,
-        context: startupDescription,
-        max_results: 6,
-        forceRefresh: false
-      })
-    })
+    // Import the cache directly instead of making HTTP request
+    const { CompetitorCache } = await import('@/lib/competitor-cache')
     
-    if (competitorResponse.ok) {
-      const data = await competitorResponse.json()
-      return data.competitors?.map((comp: any) => comp.name).slice(0, 3) || []
+    // Check cache first
+    const cachedCompetitors = await CompetitorCache.getCachedCompetitors({
+      industry,
+      context: startupDescription,
+      userInfo: userProfile.startupName,
+      ttlHours: 12
+    })
+
+    if (cachedCompetitors && cachedCompetitors.competitors.length > 0) {
+      console.log(`Using ${cachedCompetitors.competitors.length} cached competitors for ${industry}`)
+      return cachedCompetitors.competitors.map((comp: any) => comp.name).slice(0, 3)
     }
+
+    // No cached competitors available - return empty array to avoid blocking
+    // The competitor discovery will happen separately via scheduled tasks
+    console.log(`No cached competitors found for ${industry} - proceeding without competitor data`)
+    return []
   } catch (error) {
     console.error('Failed to fetch competitors:', error)
+    return []
   }
-  
-  return []
 }
 
 function buildPersonalizedSearchQueries(userProfile: UserProfile, competitors: string[]): string[] {
