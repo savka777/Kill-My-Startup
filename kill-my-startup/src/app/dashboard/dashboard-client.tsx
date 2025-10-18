@@ -68,12 +68,11 @@ export default function DashboardClient({ user }: { user: any }) {
       </header>
 
       {/* KPI cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
           { label: "News Articles", value: news.length.toString() },
           { label: "Competitors Tracked", value: competitors.length.toString() },
           { label: "Target Market", value: user.profile?.targetMarket ? "Set" : "Not Set" },
-          { label: "Keywords Monitored", value: user.profile?.alertKeywords?.length?.toString() || "0" },
         ].map((k) => (
           <div key={k.label} className="rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="text-xs text-white/60">{k.label}</div>
@@ -212,39 +211,6 @@ export default function DashboardClient({ user }: { user: any }) {
         </div>
       </section>
 
-      {/* Two-up grid */}
-      <section id="reports" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <h2 className="text-base font-medium">Your Goals</h2>
-          <div className="mt-4 space-y-3">
-            {user.profile?.primaryGoals?.map((goal: string, index: number) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm text-white/80">{goal}</span>
-                <span className="text-xs text-green-400">Active</span>
-              </div>
-            )) || (
-              <div className="text-center py-4 text-white/60">
-                No goals set. Update your profile to set goals.
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <h2 className="text-base font-medium">Monitored Keywords</h2>
-          <div className="mt-4 space-y-3">
-            {user.profile?.alertKeywords?.map((keyword: string, index: number) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm text-white/80">{keyword}</span>
-                <span className="text-xs text-blue-400">Tracking</span>
-              </div>
-            )) || (
-              <div className="text-center py-4 text-white/60">
-                No keywords being monitored.
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
 
       {/* People Talking About */}
       <section id="people-talking" className="mt-6">

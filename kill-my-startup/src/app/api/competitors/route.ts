@@ -113,16 +113,37 @@ export async function POST(request: NextRequest) {
 }
 
 function generateCompetitorQueries(industry: string, context?: string, userInfo?: string): string[] {
+  // Extract key concepts from the startup description for similarity matching
+  const keywords = context ? extractKeywords(context) : []
+  
   const baseQueries = [
-    `companies similar to ${context || industry} with website valuation funding`,
-    `${industry} startups companies with valuation website crunchbase`,
-    `public private companies ${industry} market cap valuation website`,
-    `${industry} software platforms companies website funding series`,
-    `established ${industry} companies billion valuation website linkedin`
+    // Direct similarity search regardless of stage
+    `companies building ${keywords.length > 0 ? keywords.join(' ') : industry} solutions platforms tools`,
+    `${industry} companies similar products services all stages startup to enterprise`,
+    `list companies ${industry} space valuation website from seed to public`,
+    `competitors ${industry} market all sizes startups unicorns established players`,
+    `${industry} platforms tools companies website funding any stage size`
   ]
 
   // Ensure we never exceed 5 queries (Perplexity limit)
   return baseQueries.slice(0, 5)
+}
+
+function extractKeywords(description: string): string[] {
+  if (!description) return []
+  
+  // Remove common startup words and extract meaningful terms
+  const commonWords = [
+    'startup', 'company', 'platform', 'app', 'tool', 'software', 'service', 'solution',
+    'building', 'creating', 'developing', 'making', 'helps', 'allows', 'enables',
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'
+  ]
+  
+  return description
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(word => word.length > 3 && !commonWords.includes(word))
+    .slice(0, 2) // Take top 2 meaningful terms for similarity
 }
 
 async function parseCompetitorData(
@@ -194,7 +215,18 @@ async function parseCompetitorData(
     })
   }
 
-  return competitors.slice(0, 8) // Limit to top 8 competitors
+  // Sort by diversity of stages and threat levels to get good mix
+  const sortedCompetitors = competitors.sort((a, b) => {
+    // Prioritize companies with valuation data
+    if (a.valuation && !b.valuation) return -1
+    if (!a.valuation && b.valuation) return 1
+    
+    // Then prioritize variety in threat levels
+    const threatOrder = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 }
+    return threatOrder[b.riskLevel] - threatOrder[a.riskLevel]
+  })
+  
+  return sortedCompetitors.slice(0, 8) // Limit to top 8 competitors
 }
 
 function extractCompanyName(title: string, snippet: string): string | null {
