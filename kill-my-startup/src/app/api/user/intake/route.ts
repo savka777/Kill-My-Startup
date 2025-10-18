@@ -103,8 +103,9 @@ export async function POST(req: Request) {
         // Only trigger discovery if no recent cached data exists
         if (!cachedCompetitors || cachedCompetitors.competitors.length === 0) {
           // Make the API call in a non-blocking way
-          const apiUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
-          const response = await fetch(`${apiUrl}/api/competitors`, {
+          const baseUrl = process.env.NEXTAUTH_URL || 
+                         (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+          const response = await fetch(`${baseUrl}/api/competitors`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
