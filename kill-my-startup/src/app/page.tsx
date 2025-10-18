@@ -15,8 +15,8 @@ export default function Page() {
 
       {/* Hero: animated background */}
       <section className="relative w-full h-screen">
-        {/* <ShaderAnimation /> */}
-        <Prism />
+        <ShaderAnimation />
+        {/* <Prism /> */}
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
           <div className="pointer-events-auto -translate-y-8 text-center px-4">
             <div className="mb-3 flex items-center justify-center gap-3">

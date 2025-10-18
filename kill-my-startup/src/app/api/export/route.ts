@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+// @ts-ignore - temporary fix for missing types
 import nodemailer from 'nodemailer'
 
 export interface ExportRequest {
