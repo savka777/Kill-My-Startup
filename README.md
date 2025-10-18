@@ -1,4 +1,6 @@
-# Kill-My-Startup — Handoff Notes (readme001.md)
+# Kill-My-Startup — Handoff Notes
+
+Live Link: https://www.whoiskillingmystartup.com/
 
 This document summarizes what’s implemented so far, how to run it, and where to continue. It’s tailored for agents picking up the work mid‑stream.
 
