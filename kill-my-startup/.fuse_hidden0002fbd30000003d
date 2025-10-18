@@ -1,0 +1,147 @@
+
+> kill-my-startup@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /media/shoh/Shared/Shox/Projects/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/package-lock.json
+
+ ⚠ Port 3000 is in use by an unknown process, using available port 3004 instead.
+   ▲ Next.js 15.5.6 (Turbopack)
+   - Local:        http://localhost:3004
+   - Network:      http://192.168.82.149:3004
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Compiled middleware in 331ms
+ ✓ Ready in 2.5s
+ ○ Compiling /api/competitors ...
+ ✓ Compiled /api/competitors in 1566ms
+Running comprehensive discovery for AI/education
+Performing comprehensive competitor discovery with sonar-pro
+Successfully parsed 3 competitors from JSON
+Saving 3 competitors to database for industry: AI/education
+Created new competitor: Carnegie Learning
+Created new competitor: Amira Learning
+Created new competitor: Miquido
+Successfully saved 3 competitors to database
+Cached 3 competitors for industry: AI/education
+Saved and cached 3 competitors for discovery (TTL: 24h)
+ POST /api/competitors 200 in 10266ms
+ ✓ Compiled /api/social-media/query in 288ms
+ GET /api/social-media/query?projectId=cmgvqp51q0000ihc3b4f0d3tv&days=7&includeCompetitors=true 200 in 2202ms
+ GET /api/social-media/query?projectId=cmgvqp51q0000ihc3b4f0d3tv&days=7&includeCompetitors=true 200 in 1191ms
+ ✓ Compiled /api/social-media/ingest in 150ms
+Processing Kill My Startup...
+Fetching Twitter mentions for "Kill My Startup" via Perplexity
+Fetching Reddit mentions for "Kill My Startup" via Perplexity
+ POST /api/social-media/ingest 200 in 16650ms
+Processing Kill My Startup...
+Fetching Twitter mentions for "Kill My Startup" via Perplexity
+Fetching Reddit mentions for "Kill My Startup" via Perplexity
+ POST /api/social-media/ingest 200 in 17248ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.erp4hyvmtxb'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.erp4hyvmtxb'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 1407ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.yeyvcf27p3d'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.yeyvcf27p3d'
+}
+[Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.erp4hyvmtxb'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.erp4hyvmtxb'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.27bdl2mox1g'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.27bdl2mox1g'
+}
+[Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.tmf3v10s3zj'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.tmf3v10s3zj'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.2wsiq11if3o'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.2wsiq11if3o'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.8vrt9l35wm5'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.8vrt9l35wm5'
+}
+[Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.2wsiq11if3o'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.2wsiq11if3o'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.vqi11uitqp'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.vqi11uitqp'
+}
+[Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.81w43mlooq'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.81w43mlooq'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.a58ko3en4h'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.a58ko3en4h'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.bsymqpqqm46'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.bsymqpqqm46'
+}
+[Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.a58ko3en4h'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.a58ko3en4h'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.52gmnv4relr'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.52gmnv4relr'
+}
+[Error: ENOENT: no such file or directory, open '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.vjww4q3r4af'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/.next/static/development/_buildManifest.js.tmp.vjww4q3r4af'
+}
+ ✓ Compiled middleware in 9ms
+ ✓ Compiled middleware in 4ms
+ ✓ Compiled middleware in 2ms
+ ✓ Compiled middleware in 10ms
+ ✓ Compiled middleware in 2ms
+ ✓ Compiled middleware in 141ms
+ ✓ Compiled middleware in 3ms
+ ✓ Compiled middleware in 41ms
+ ✓ Compiled middleware in 5ms
+ ✓ Compiled middleware in 3ms

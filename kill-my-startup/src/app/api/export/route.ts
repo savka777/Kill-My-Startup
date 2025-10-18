@@ -319,7 +319,7 @@ function generateEmailHTML(reportData: any, user: any): string {
           <div class="section">
             <h2>Top Competitors Found</h2>
             <div class="competitor-list">
-              ${topCompetitors.map(comp => `
+              ${topCompetitors.map((comp: any) => `
                 <div class="competitor-item">
                   <div>
                     <div class="competitor-name">${comp.name}</div>
@@ -362,7 +362,7 @@ function generateEmailHTML(reportData: any, user: any): string {
           <div class="section">
             <h2>Recent News Headlines</h2>
             <div class="recommendations">
-              ${newsHighlights.map(news => `
+              ${newsHighlights.map((news: any) => `
                 <div class="recommendation">
                   <strong>${news.title}</strong>
                   ${news.relevance ? `<br><em>${news.relevance}</em>` : ''}
@@ -376,7 +376,7 @@ function generateEmailHTML(reportData: any, user: any): string {
           <div class="section">
             <h2>Key Findings</h2>
             <div class="recommendations">
-              ${factualSummary.map(fact => `<div class="recommendation">• ${fact}</div>`).join('')}
+              ${factualSummary.map((fact: any) => `<div class="recommendation">• ${fact}</div>`).join('')}
             </div>
           </div>
         </div>
