@@ -93,9 +93,10 @@ export async function POST(request: NextRequest) {
         industry: comp.industry,
         foundedYear: comp.foundedYear,
         employeeCount: comp.employeeCount,
+        valuation: comp.valuation,
         lastFunding: comp.lastFunding,
         fundingAmount: comp.fundingAmount,
-        recentNews: comp.recentNews,
+        stage: comp.stage,
         riskLevel: comp.riskLevel
       })),
       total_competitors: competitors.length,
@@ -113,19 +114,12 @@ export async function POST(request: NextRequest) {
 
 function generateCompetitorQueries(industry: string, context?: string, userInfo?: string): string[] {
   const baseQueries = [
-    `list of companies in ${industry} industry 2024`,
-    `${industry} startups companies founded 2023 2024`,
-    `major players ${industry} market companies`,
-    `${industry} software companies products platforms`
+    `companies similar to ${context || industry} with website valuation funding`,
+    `${industry} startups companies with valuation website crunchbase`,
+    `public private companies ${industry} market cap valuation website`,
+    `${industry} software platforms companies website funding series`,
+    `established ${industry} companies billion valuation website linkedin`
   ]
-
-  // Add context-specific query if provided
-  if (context) {
-    baseQueries.push(`companies building ${context} tools ${industry}`)
-  } else {
-    // If no context, add a generic query
-    baseQueries.push(`unicorn companies ${industry} billion valuation`)
-  }
 
   // Ensure we never exceed 5 queries (Perplexity limit)
   return baseQueries.slice(0, 5)
@@ -142,9 +136,10 @@ async function parseCompetitorData(
   industry: string
   foundedYear?: number
   employeeCount?: string
+  valuation?: string
   lastFunding?: string
   fundingAmount?: string
-  recentNews?: string
+  stage?: string
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
 }>> {
   const competitors: any[] = []
@@ -153,6 +148,7 @@ async function parseCompetitorData(
   for (const result of searchResults) {
     const title = result.title.toLowerCase()
     const snippet = result.snippet || ''
+    const content = title + ' ' + snippet
     
     // Extract company name from title
     const companyName = extractCompanyName(result.title, result.snippet)
@@ -162,28 +158,43 @@ async function parseCompetitorData(
     
     seenCompanies.add(companyName.toLowerCase())
     
-    // Determine risk level based on content
-    const riskLevel = determineRiskLevel(title, snippet)
+    // Extract company website (prioritize actual company domains)
+    const website = extractCompanyWebsite(result.url, content, companyName)
+    
+    // Determine risk level based on company size/funding
+    const riskLevel = determineCompetitorRisk(content)
+    
+    // Extract valuation information
+    const valuation = extractValuation(content)
     
     // Extract funding information
     const fundingInfo = extractFundingInfo(title, snippet)
     
-    // Extract recent news
-    const recentNews = extractRecentNews(title, snippet)
+    // Extract founding year
+    const foundedYear = extractFoundedYear(content)
+    
+    // Extract employee count
+    const employeeCount = extractEmployeeCount(content)
+    
+    // Determine company stage
+    const stage = determineCompanyStage(content, valuation, fundingInfo.fundingAmount)
     
     competitors.push({
       name: companyName,
-      description: snippet.substring(0, 200) + (snippet.length > 200 ? '...' : ''),
-      website: extractWebsite(result.url),
+      description: generateCompanyDescription(snippet, companyName, industry),
+      website,
       industry,
+      foundedYear,
+      employeeCount,
+      valuation,
       lastFunding: fundingInfo.lastFunding,
       fundingAmount: fundingInfo.fundingAmount,
-      recentNews,
+      stage,
       riskLevel
     })
   }
 
-  return competitors.slice(0, 6) // Limit to top 6 competitors
+  return competitors.slice(0, 8) // Limit to top 8 competitors
 }
 
 function extractCompanyName(title: string, snippet: string): string | null {
@@ -222,33 +233,215 @@ function extractCompanyName(title: string, snippet: string): string | null {
   return null
 }
 
-function determineRiskLevel(title: string, snippet: string): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
-  const content = (title + ' ' + snippet).toLowerCase()
+function extractValuation(content: string): string | undefined {
+  const valuationPatterns = [
+    // Billion dollar valuations
+    /\$(\d+(?:\.\d+)?)\s*billion/i,
+    /(\d+(?:\.\d+)?)\s*billion\s*valuation/i,
+    /valued\s*at\s*\$?(\d+(?:\.\d+)?)\s*billion/i,
+    
+    // Million dollar valuations
+    /\$(\d+(?:\.\d+)?)\s*million\s*valuation/i,
+    /valued\s*at\s*\$?(\d+(?:\.\d+)?)\s*million/i,
+    
+    // Market cap
+    /market\s*cap\s*\$?(\d+(?:\.\d+)?)\s*(billion|million)/i,
+    
+    // Unicorn references
+    /unicorn/i
+  ]
   
-  // Critical risk indicators
-  if (content.includes('unicorn') || 
-      content.includes('billion') || 
-      content.includes('series c') || 
-      content.includes('series d') ||
-      content.includes('ipo')) {
+  for (const pattern of valuationPatterns) {
+    const match = content.match(pattern)
+    if (match) {
+      if (match[0].toLowerCase().includes('unicorn')) {
+        return '$1B+'
+      }
+      if (match[2] === 'billion' || match[0].includes('billion')) {
+        return `$${match[1]}B`
+      }
+      if (match[2] === 'million' || match[0].includes('million')) {
+        return `$${match[1]}M`
+      }
+    }
+  }
+  
+  return undefined
+}
+
+function extractFoundedYear(content: string): number | undefined {
+  const yearPatterns = [
+    /founded\s*in\s*(\d{4})/i,
+    /established\s*in\s*(\d{4})/i,
+    /started\s*in\s*(\d{4})/i,
+    /since\s*(\d{4})/i
+  ]
+  
+  for (const pattern of yearPatterns) {
+    const match = content.match(pattern)
+    if (match && match[1]) {
+      const year = parseInt(match[1])
+      if (year >= 1990 && year <= new Date().getFullYear()) {
+        return year
+      }
+    }
+  }
+  
+  return undefined
+}
+
+function extractEmployeeCount(content: string): string | undefined {
+  const employeePatterns = [
+    /(\d+(?:,\d+)*)\s*employees/i,
+    /team\s*of\s*(\d+(?:,\d+)*)/i,
+    /(\d+(?:,\d+)*)\s*people/i,
+    /(\d+)\+\s*employees/i
+  ]
+  
+  for (const pattern of employeePatterns) {
+    const match = content.match(pattern)
+    if (match && match[1]) {
+      const count = match[1].replace(',', '')
+      const num = parseInt(count)
+      if (num > 5 && num < 1000000) {
+        if (num >= 10000) return '10,000+'
+        if (num >= 1000) return '1,000+'
+        if (num >= 500) return '500+'
+        if (num >= 100) return '100+'
+        if (num >= 50) return '50+'
+        return `${num}`
+      }
+    }
+  }
+  
+  return undefined
+}
+
+function extractCompanyWebsite(url: string, content: string, companyName: string): string | undefined {
+  // Try to extract from URL first
+  try {
+    const domain = new URL(url).hostname
+    
+    // Skip news sites and other non-company domains
+    const excludeDomains = [
+      'techcrunch.com', 'venturebeat.com', 'forbes.com', 'bloomberg.com',
+      'crunchbase.com', 'linkedin.com', 'twitter.com', 'facebook.com',
+      'wikipedia.org', 'google.com', 'youtube.com', 'medium.com'
+    ]
+    
+    if (!excludeDomains.some(excluded => domain.includes(excluded))) {
+      // Check if domain might be related to company name
+      const simpleName = companyName.toLowerCase().replace(/[^a-z0-9]/g, '')
+      const simpleDomain = domain.replace(/[^a-z0-9]/g, '')
+      
+      if (simpleDomain.includes(simpleName) || simpleName.includes(simpleDomain.split('.')[0])) {
+        return `https://${domain}`
+      }
+    }
+  } catch (error) {
+    // URL parsing failed, continue to content extraction
+  }
+  
+  // Extract website from content
+  const websitePatterns = [
+    /website[:\s]+([a-zA-Z0-9][a-zA-Z0-9\-]{1,61}[a-zA-Z0-9]\.(?:com|io|ai|co|net|org))/i,
+    /visit[:\s]+([a-zA-Z0-9][a-zA-Z0-9\-]{1,61}[a-zA-Z0-9]\.(?:com|io|ai|co|net|org))/i,
+    /(https?:\/\/[a-zA-Z0-9][a-zA-Z0-9\-]{1,61}[a-zA-Z0-9]\.(?:com|io|ai|co|net|org))/i
+  ]
+  
+  for (const pattern of websitePatterns) {
+    const match = content.match(pattern)
+    if (match && match[1]) {
+      return match[1].startsWith('http') ? match[1] : `https://${match[1]}`
+    }
+  }
+  
+  return undefined
+}
+
+function determineCompanyStage(content: string, valuation?: string, fundingAmount?: string): string | undefined {
+  const stageLower = content.toLowerCase()
+  
+  if (stageLower.includes('ipo') || stageLower.includes('public company')) {
+    return 'Public'
+  }
+  
+  if (valuation) {
+    if (valuation.includes('B') || stageLower.includes('unicorn')) {
+      return 'Unicorn'
+    }
+    if (valuation.includes('M')) {
+      const value = parseFloat(valuation.replace(/[$M]/g, ''))
+      if (value >= 100) return 'Late Stage'
+      if (value >= 10) return 'Growth Stage'
+    }
+  }
+  
+  if (stageLower.includes('series d') || stageLower.includes('series e')) {
+    return 'Late Stage'
+  }
+  if (stageLower.includes('series c')) {
+    return 'Growth Stage'
+  }
+  if (stageLower.includes('series b')) {
+    return 'Expansion'
+  }
+  if (stageLower.includes('series a')) {
+    return 'Early Stage'
+  }
+  if (stageLower.includes('seed')) {
+    return 'Seed'
+  }
+  
+  return 'Private'
+}
+
+function generateCompanyDescription(snippet: string, companyName: string, industry: string): string {
+  if (!snippet) {
+    return `${industry} company`
+  }
+  
+  // Clean up the snippet to create a concise description
+  let description = snippet.substring(0, 150)
+  
+  // Remove company name repetition
+  description = description.replace(new RegExp(companyName, 'gi'), 'the company')
+  
+  // Ensure it ends properly
+  if (description.length === 150) {
+    description = description.substring(0, description.lastIndexOf(' ')) + '...'
+  }
+  
+  return description
+}
+
+function determineCompetitorRisk(content: string): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
+  const contentLower = content.toLowerCase()
+  
+  // Critical threat indicators
+  if (contentLower.includes('unicorn') || 
+      contentLower.includes('billion') || 
+      contentLower.includes('market leader') ||
+      contentLower.includes('dominant') ||
+      contentLower.includes('ipo')) {
     return 'CRITICAL'
   }
   
-  // High risk indicators
-  if (content.includes('series b') || 
-      content.includes('100m') || 
-      content.includes('market leader') ||
-      content.includes('acquires') ||
-      content.includes('partnership')) {
+  // High threat indicators
+  if (contentLower.includes('series c') || 
+      contentLower.includes('series d') ||
+      contentLower.includes('100m') || 
+      contentLower.includes('acquisition') ||
+      contentLower.includes('partnership with')) {
     return 'HIGH'
   }
   
-  // Medium risk indicators
-  if (content.includes('series a') || 
-      content.includes('funding') || 
-      content.includes('raises') ||
-      content.includes('grows') ||
-      content.includes('expands')) {
+  // Medium threat indicators
+  if (contentLower.includes('series b') || 
+      contentLower.includes('funding') || 
+      contentLower.includes('raises') ||
+      contentLower.includes('expansion') ||
+      contentLower.includes('grows')) {
     return 'MEDIUM'
   }
   
@@ -272,23 +465,6 @@ function extractFundingInfo(title: string, snippet: string): {
   return { lastFunding, fundingAmount }
 }
 
-function extractRecentNews(title: string, snippet: string): string {
-  return title.length > 100 ? title.substring(0, 100) + '...' : title
-}
-
-function extractWebsite(url: string): string | undefined {
-  try {
-    const domain = new URL(url).hostname
-    // If it's from news sites, don't return as company website
-    const newsSites = ['techcrunch.com', 'venturebeat.com', 'forbes.com', 'bloomberg.com']
-    if (newsSites.some(site => domain.includes(site))) {
-      return undefined
-    }
-    return domain
-  } catch {
-    return undefined
-  }
-}
 
 // GET endpoint for health check
 export async function GET() {
