@@ -1,0 +1,32 @@
+
+> kill-my-startup@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /media/shoh/Shared/Shox/Projects/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /media/shoh/Shared/Shox/Projects/kill-my-startup/kill-my-startup/package-lock.json
+
+ ⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
+   ▲ Next.js 15.5.6 (Turbopack)
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.82.149:3001
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Compiled middleware in 321ms
+ ✓ Ready in 2.4s
+ ○ Compiling /api/social-media/ingest ...
+ ✓ Compiled /api/social-media/ingest in 1479ms
+Processing Kill My Startup...
+Twitter API error: 404, skipping Twitter mentions
+Reddit API error: 404, skipping Reddit mentions
+ POST /api/social-media/ingest 200 in 16754ms
+ ✓ Compiled middleware in 8ms
+ ✓ Compiled middleware in 5ms
+ ✓ Compiled middleware in 2ms
+ ✓ Compiled middleware in 10ms
+ ✓ Compiled middleware in 2ms
+ ✓ Compiled middleware in 6ms

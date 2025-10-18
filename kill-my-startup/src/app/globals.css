@@ -6,6 +6,7 @@
   /* Perplexity-inspired brand tokens */
   --brand-accent: #2395e7; /* highlight */
   --brand-muted: #737373; /* secondary text */
+  --black: #000000; /* used by GlowingEffect */
 }
 
 @theme inline {
