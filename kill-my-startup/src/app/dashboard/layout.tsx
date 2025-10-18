@@ -2,6 +2,7 @@
 
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/dashboard/Sidebar"
 import { BarChart3, Home, Settings, FileText } from "lucide-react"
+import Image from "next/image"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const links = [
@@ -17,9 +18,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Sidebar>
           <SidebarBody>
             <div className="flex-1">
-              <div className="mb-6 hidden md:block">
-                <div className="h-8 w-8 rounded-md bg-white/90" />
+              {/* Desktop Logo */}
+              <div className="mb-8 hidden md:flex items-center justify-center py-2">
+                <Image
+                  src="/logo.svg"
+                  alt="Kill My Startup logo"
+                  width={48}
+                  height={48}
+                  priority
+                  className="transition-all duration-200"
+                />
               </div>
+              
+              {/* Mobile Logo */}
+              <div className="mb-6 flex md:hidden items-center justify-center py-4">
+                <Image
+                  src="/logo.svg"
+                  alt="Kill My Startup logo"
+                  width={40}
+                  height={40}
+                  priority
+                />
+              </div>
+              
               <div className="flex flex-col">
                 {links.map((l) => (
                   <SidebarLink key={l.href} link={l} />
@@ -39,4 +60,3 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   )
 }
-

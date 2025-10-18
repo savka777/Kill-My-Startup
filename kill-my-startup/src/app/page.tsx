@@ -17,11 +17,19 @@ export default function Page() {
         <ShaderAnimation />
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
           <div className="pointer-events-auto -translate-y-8 text-center px-4">
+            <div className="mb-3 flex items-center justify-center gap-3">
+              <span className="text-white/80 mix-blend-difference text-sm md:text-base">
+                Reality check for founders
+              </span>
+              <span className="text-[10px] md:text-xs uppercase tracking-wide text-black bg-white/90 mix-blend-difference rounded-full px-2.5 py-1">
+                Powered by Perplexity
+              </span>
+            </div>
             <h1 className="text-white mix-blend-difference text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tight">
               whose killing your startup?
             </h1>
-            <p className="mt-4 text-white mix-blend-difference text-lg md:text-2xl font-medium">
-              powered by perplexity search
+            <p className="mt-4 text-white/90 mix-blend-difference text-lg md:text-2xl font-medium">
+              Product teardown and risk radar
             </p>
             <div className="mt-8 flex justify-center">
               <SignedOut>

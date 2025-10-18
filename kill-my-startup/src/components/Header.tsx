@@ -1,4 +1,5 @@
 "use client"
+import Image from "next/image"
 
 export function Header() {
   return (
@@ -6,7 +7,14 @@ export function Header() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex h-16 items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="h-6 w-6 rounded-sm bg-white mix-blend-difference" />
+            <Image
+              src="/logo.svg"
+              alt="Kill My Startup logo"
+              width={24}
+              height={24}
+              priority
+              className="mix-blend-difference"
+            />
             {/* <span className="text-lg font-medium text-white mix-blend-difference select-none">
               Kill My Startup
             </span> */}

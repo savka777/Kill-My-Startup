@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getDashboardNews, type NewsItem } from '@/lib/perplexity'
 import { getDashboardCompetitors, getRiskLevelColor, getRiskLevelTextColor, type CompetitorData } from '@/lib/competitors'
 import PeopleTalkingAbout from '@/components/social-media/PeopleTalkingAbout'
+import { ExportModal } from '@/components/ExportModal'
 
 export default function DashboardClient({ user }: { user: any }) {
   const [news, setNews] = useState<NewsItem[]>([])
@@ -14,6 +15,7 @@ export default function DashboardClient({ user }: { user: any }) {
   const [competitorFromCache, setCompetitorFromCache] = useState(false)
   const [lastFetch, setLastFetch] = useState<Date | null>(null)
   const [competitorLastFetch, setCompetitorLastFetch] = useState<Date | null>(null)
+  const [showExportModal, setShowExportModal] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
@@ -63,7 +65,12 @@ export default function DashboardClient({ user }: { user: any }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="rounded-full bg-white text-black px-4 py-1.5 text-sm font-medium hover:bg-white/90 transition-colors">Export</button>
+          <button 
+            onClick={() => setShowExportModal(true)}
+            className="rounded-full bg-white text-black px-4 py-1.5 text-sm font-medium hover:bg-white/90 transition-colors"
+          >
+            Export
+          </button>
         </div>
       </header>
 
@@ -244,6 +251,12 @@ export default function DashboardClient({ user }: { user: any }) {
           )}
         </div>
       </section>
+
+      {/* Export Modal */}
+      <ExportModal 
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+      />
     </div>
   )
 }
