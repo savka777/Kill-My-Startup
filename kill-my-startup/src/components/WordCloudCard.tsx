@@ -75,9 +75,9 @@ export default function WordCloudCard({
   };
 
   const alphaScale = (w: WordDatum) => {
-    // Optional recency weight -> opacity; default 0.8
-    const r = w.recentWeight ?? 0.8;
-    return Math.min(1, Math.max(0.25, r));
+    // Enhanced transparency for better visibility on dark theme
+    const r = w.recentWeight ?? 0.9; // Higher default opacity for better visibility
+    return Math.min(1, Math.max(0.6, r)); // Higher minimum opacity for dark backgrounds
   };
 
 
@@ -136,18 +136,21 @@ export default function WordCloudCard({
         color: (word: string, weight: number, fontSize: number, distance: number, theta: number) => {
           // Find the word data to get sentiment
           const wordData = ranked.find(w => w.text === word);
-          if (!wordData) return '#ffffff';
+          if (!wordData) return 'rgba(147, 197, 253, 0.8)'; // blue-300 with transparency
           
           const sentiment = wordData.sentiment ?? 0;
           const alpha = alphaScale(wordData);
           
-          // Convert sentiment to color
+          // Custom color palette optimized for dark theme
           if (sentiment > 0.05) {
-            return `rgba(16, 185, 129, ${alpha})`; // Green for positive
+            // Positive sentiment - emerald-400 with green glow
+            return `rgba(74, 222, 128, ${alpha})`; // #4ADE80
           } else if (sentiment < -0.05) {
-            return `rgba(239, 68, 68, ${alpha})`; // Red for negative
+            // Negative sentiment - rose-400 soft red
+            return `rgba(251, 113, 133, ${alpha})`; // #FB7185
           } else {
-            return `rgba(156, 163, 175, ${alpha})`; // Gray for neutral
+            // Neutral sentiment - blue-300 cool balanced tone
+            return `rgba(147, 197, 253, ${alpha})`; // #93C5FD
           }
         },
         classes: 'select-none',

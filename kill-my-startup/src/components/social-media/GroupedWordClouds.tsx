@@ -170,20 +170,20 @@ export default function GroupedWordClouds({
               <h4 className="text-sm font-medium text-white">{entity.name}</h4>
               <div className="flex items-center gap-3 text-xs">
                 <div className="text-white/60">{entity.wordCount} words</div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span className="text-white/60">{entity.sentimentBreakdown.positive}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#4ADE80' }}></div>
+                      <span className="text-white/60">{entity.sentimentBreakdown.positive}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#FB7185' }}></div>
+                      <span className="text-white/60">{entity.sentimentBreakdown.negative}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#93C5FD' }}></div>
+                      <span className="text-white/60">{entity.sentimentBreakdown.neutral}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                    <span className="text-white/60">{entity.sentimentBreakdown.negative}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-gray-500"></div>
-                    <span className="text-white/60">{entity.sentimentBreakdown.neutral}</span>
-                  </div>
-                </div>
               </div>
             </div>
 
