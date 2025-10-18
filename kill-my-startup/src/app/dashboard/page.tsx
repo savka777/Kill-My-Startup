@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getDashboardNews, type NewsItem } from '@/lib/perplexity'
 import { getDashboardCompetitors, getRiskLevelColor, getRiskLevelTextColor, type CompetitorData } from '@/lib/competitors'
+import PeopleTalkingAbout from '@/components/social-media/PeopleTalkingAbout'
 
 export default function DashboardPage() {
   const [news, setNews] = useState<NewsItem[]>([])
@@ -250,6 +251,14 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* People Talking About */}
+      <section id="people-talking" className="mt-6">
+        <PeopleTalkingAbout 
+          projectId="cmgvqp51q0000ihc3b4f0d3tv" 
+          initialDays={7} 
+        />
       </section>
 
       {/* Competitors Launched Timeline */}
