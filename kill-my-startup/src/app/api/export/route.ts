@@ -30,44 +30,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User profile not found" }, { status: 404 })
     }
 
-    // Fetch fresh news and competitor data using internal APIs
-    const [newsResponse, competitorResponse] = await Promise.allSettled([
-      fetch(`http://localhost:3000/api/search`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Cookie': request.headers.get('cookie') || ''
-        },
-        body: JSON.stringify({ max_results: 15 })
-      }),
-      fetch(`http://localhost:3000/api/competitors`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          industry: user.profile.industry,
-          context: user.profile.startupDescription,
-          max_results: 8
-        })
-      })
-    ])
-
+    // Fetch news and competitor data directly using cache/database
     let news = []
     let competitors = []
     let newsAnalysisText = null
 
-    if (newsResponse.status === 'fulfilled') {
-      const newsData = await newsResponse.value.json()
-      news = newsData.news || []
-      newsAnalysisText = newsData.analysis || null
-    } else {
-      console.error('Failed to fetch news:', newsResponse.reason)
-    }
+    try {
+      // Import cache functions directly
+      const { NewsCache } = await import('@/lib/news-cache')
+      const { CompetitorCache } = await import('@/lib/competitor-cache')
+      
+      // Try to get cached news data
+      const cachedNews = await NewsCache.getCachedNews({
+        industry: user.profile.industry,
+        userInfo: user.profile.startupName,
+        context: user.profile.startupDescription,
+        ttlHours: 24 // Accept up to 24 hour old cache for exports
+      })
 
-    if (competitorResponse.status === 'fulfilled') {
-      const competitorData = await competitorResponse.value.json()
-      competitors = competitorData.competitors || []
-    } else {
-      console.error('Failed to fetch competitors:', competitorResponse.reason)
+      if (cachedNews && cachedNews.articles.length > 0) {
+        news = cachedNews.articles.slice(0, 15) // Limit to 15 for export
+        console.log(`Using ${news.length} cached news articles for export`)
+      }
+
+      // Try to get cached competitor data
+      const cachedCompetitors = await CompetitorCache.getCachedCompetitors({
+        industry: user.profile.industry,
+        context: user.profile.startupDescription,
+        userInfo: user.profile.startupName,
+        ttlHours: 24 // Accept up to 24 hour old cache for exports
+      })
+
+      if (cachedCompetitors && cachedCompetitors.competitors.length > 0) {
+        competitors = cachedCompetitors.competitors.slice(0, 8) // Limit to 8 for export
+        console.log(`Using ${competitors.length} cached competitors for export`)
+      }
+
+      // Generate basic analysis text if we have news
+      if (news.length > 0) {
+        newsAnalysisText = `Analysis based on ${news.length} recent articles in ${user.profile.industry} industry.`
+      }
+    } catch (error) {
+      console.error('Error fetching cached data for export:', error)
     }
 
     // Generate report data
